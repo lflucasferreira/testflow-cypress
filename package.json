@@ -9,10 +9,14 @@
     "cy:run:headed": "cypress run --headed",
     "cy:run:smoke": "cypress run --spec 'cypress/e2e/smoke/**'",
     "cy:run:auth": "cypress run --spec 'cypress/e2e/auth/**'",
-    "cy:run:team": "cypress run --spec 'cypress/e2e/team/**'"
+    "cy:run:dashboard": "cypress run --spec 'cypress/e2e/dashboard/**'",
+    "cy:run:team": "cypress run --spec 'cypress/e2e/team/**'",
+    "cy:run:settings": "cypress run --spec 'cypress/e2e/settings/**'",
+    "cy:run:components": "cypress run --spec 'cypress/e2e/components/**'"
   },
   "devDependencies": {
     "cypress": "^13.17.0",
-    "cypress-axe": "^1.5.0"
+    "cypress-axe": "^1.5.0",
+    "wait-on": "^9.0.10"
   }
 }

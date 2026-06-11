@@ -6,11 +6,16 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  # ── Stage 1: install all dependencies and populate cache ──────────────────
+  # ── Stage 1: install all dependencies and populate caches ─────────────────
   setup:
     name: Install dependencies
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout test suite
         uses: actions/checkout@v4
@@ -33,6 +38,12 @@ jobs:
           path: node_modules
           key: tests-${{ hashFiles('package-lock.json') }}
 
+      - name: Cache Cypress binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-bin-${{ hashFiles('package-lock.json') }}
+
       - name: Cache TestFlow node_modules
         id: cache-app
         uses: actions/cache@v4
@@ -49,11 +60,16 @@ jobs:
         working-directory: testflow-app
         run: npm install
 
-  # ── Stage 2: start app and run Cypress ────────────────────────────────────
+  # ── Stage 2: run each suite in parallel ───────────────────────────────────
   test:
-    name: Run Cypress
+    name: Cypress — ${{ matrix.suite }}
     runs-on: ubuntu-latest
     needs: setup
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [smoke, auth, dashboard, team, settings, components]
     steps:
       - name: Checkout test suite
         uses: actions/checkout@v4
@@ -75,6 +91,12 @@ jobs:
           path: node_modules
           key: tests-${{ hashFiles('package-lock.json') }}
 
+      - name: Restore Cypress binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-bin-${{ hashFiles('package-lock.json') }}
+
       - name: Restore TestFlow node_modules
         uses: actions/cache@v4
         with:
@@ -88,30 +110,59 @@ jobs:
       - name: Wait for TestFlow to be ready
         run: npx wait-on http://localhost:5050/health --timeout 30000
 
-      - name: Run Cypress
-        run: npm run cy:run
+      - name: Run Cypress — ${{ matrix.suite }}
+        run: npm run cy:run:${{ matrix.suite }}
 
-  # ── Stage 3: publish test artifacts ───────────────────────────────────────
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ matrix.suite }}
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Upload videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: videos-${{ matrix.suite }}
+          path: cypress/videos
+          if-no-files-found: ignore
+
+  # ── Stage 3: merge and publish all artifacts ──────────────────────────────
   report:
     name: Publish artifacts
     runs-on: ubuntu-latest
     needs: test
     if: always()
+    timeout-minutes: 5
     steps:
-      - name: Checkout test suite
-        uses: actions/checkout@v4
+      - name: Download all screenshots
+        uses: actions/download-artifact@v4
+        with:
+          pattern: screenshots-*
+          merge-multiple: true
+          path: cypress/screenshots
+        continue-on-error: true
 
-      - name: Upload screenshots on failure
-        if: needs.test.result == 'failure'
+      - name: Download all videos
+        uses: actions/download-artifact@v4
+        with:
+          pattern: videos-*
+          merge-multiple: true
+          path: cypress/videos
+        continue-on-error: true
+
+      - name: Publish combined screenshots
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-screenshots
+          name: all-screenshots
           path: cypress/screenshots
           if-no-files-found: ignore
 
-      - name: Upload videos
+      - name: Publish combined videos
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-videos
+          name: all-videos
           path: cypress/videos
           if-no-files-found: ignore
