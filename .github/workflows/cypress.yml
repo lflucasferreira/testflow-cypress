@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -21,35 +18,35 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout test suite
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Checkout TestFlow app
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: qaschoolbr/testflow
           path: testflow-app
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
 
       - name: Cache test suite node_modules
         id: cache-tests
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: node_modules
           key: tests-${{ hashFiles('package-lock.json') }}
 
       - name: Cache Cypress binary
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/Cypress
           key: cypress-bin-${{ hashFiles('package-lock.json') }}
 
       - name: Cache TestFlow node_modules
         id: cache-app
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: testflow-app/node_modules
           key: app-${{ hashFiles('testflow-app/package-lock.json') }}
@@ -75,33 +72,33 @@ jobs:
         suite: [smoke, auth, dashboard, team, settings, components]
     steps:
       - name: Checkout test suite
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Checkout TestFlow app
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: qaschoolbr/testflow
           path: testflow-app
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
 
       - name: Restore test suite node_modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: node_modules
           key: tests-${{ hashFiles('package-lock.json') }}
 
       - name: Restore Cypress binary
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/Cypress
           key: cypress-bin-${{ hashFiles('package-lock.json') }}
 
       - name: Restore TestFlow node_modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: testflow-app/node_modules
           key: app-${{ hashFiles('testflow-app/package-lock.json') }}
@@ -118,7 +115,7 @@ jobs:
 
       - name: Upload screenshots on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: screenshots-${{ matrix.suite }}
           path: cypress/screenshots
@@ -126,7 +123,7 @@ jobs:
 
       - name: Upload videos
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: videos-${{ matrix.suite }}
           path: cypress/videos
@@ -141,7 +138,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Download all screenshots
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: screenshots-*
           merge-multiple: true
@@ -149,7 +146,7 @@ jobs:
         continue-on-error: true
 
       - name: Download all videos
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: videos-*
           merge-multiple: true
@@ -157,14 +154,14 @@ jobs:
         continue-on-error: true
 
       - name: Publish combined screenshots
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: all-screenshots
           path: cypress/screenshots
           if-no-files-found: ignore
 
       - name: Publish combined videos
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: all-videos
           path: cypress/videos
