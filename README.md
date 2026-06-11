@@ -22,7 +22,7 @@ The app runs locally and exposes both a UI (`:5050/web/`) and a REST API (`:5050
 ## Prerequisites
 
 - Node.js 18+
-- [TestFlow app](https://testflow.app) running locally on port `5050`
+- TestFlow app running locally on port `5050`
 
 ## Setup
 
@@ -32,14 +32,13 @@ npm install
 
 ## Running the app
 
-Download and start the TestFlow sandbox:
+Clone and start the TestFlow application:
 
 ```bash
-# macOS / Linux
-npx testflow start
-
-# or run the binary directly if downloaded manually
-./testflow --port 5050
+git clone https://github.com/qaschoolbr/testflow.git
+cd testflow
+npm install
+npm start
 ```
 
 The app will be available at `http://localhost:5050`. Default credentials:
@@ -63,6 +62,12 @@ npm run cy:run:smoke
 npm run cy:run:auth
 npm run cy:run:team
 ```
+
+## CI/CD
+
+The pipeline runs automatically on every push and pull request to `main` via GitHub Actions (`.github/workflows/cypress.yml`).
+
+It clones the TestFlow app, starts it, waits for the `/health` endpoint to respond, and then runs the full Cypress suite. Screenshots are uploaded as artifacts on failure; videos are always uploaded.
 
 ## Project structure
 
