@@ -1,6 +1,6 @@
 # testflow-cypress
 
-Cypress E2E automation suite for [TestFlow](https://testflow.app) — a web-based sandbox application designed for QA practice and automation learning.
+Cypress E2E automation suite for [TestFlow](https://github.com/qaschoolbr/testflow) — a web-based sandbox application designed for QA practice and automation learning.
 
 ## About TestFlow
 
