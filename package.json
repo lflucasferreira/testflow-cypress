@@ -1,0 +1,18 @@
+{
+  "name": "testflow-cypress",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cypress E2E automation for TestFlow web app",
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "cy:run:headed": "cypress run --headed",
+    "cy:run:smoke": "cypress run --spec 'cypress/e2e/smoke/**'",
+    "cy:run:auth": "cypress run --spec 'cypress/e2e/auth/**'",
+    "cy:run:team": "cypress run --spec 'cypress/e2e/team/**'"
+  },
+  "devDependencies": {
+    "cypress": "^13.17.0",
+    "cypress-axe": "^1.5.0"
+  }
+}
