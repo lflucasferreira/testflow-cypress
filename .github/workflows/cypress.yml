@@ -113,6 +113,14 @@ jobs:
       - name: Run Cypress — ${{ matrix.suite }}
         run: npm run cy:run:${{ matrix.suite }}
 
+      - name: Upload JSON report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: report-json-${{ matrix.suite }}
+          path: cypress/reports
+          if-no-files-found: ignore
+
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v6
@@ -121,22 +129,35 @@ jobs:
           path: cypress/screenshots
           if-no-files-found: ignore
 
-      - name: Upload videos
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: videos-${{ matrix.suite }}
-          path: cypress/videos
-          if-no-files-found: ignore
-
-  # ── Stage 3: merge and publish all artifacts ──────────────────────────────
+  # ── Stage 3: merge JSONs and generate combined HTML report ───────────────
   report:
-    name: Publish artifacts
+    name: Generate HTML report
     runs-on: ubuntu-latest
     needs: test
     if: always()
     timeout-minutes: 5
     steps:
+      - name: Checkout test suite
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Restore test suite node_modules
+        uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: tests-${{ hashFiles('package-lock.json') }}
+
+      - name: Download all JSON reports
+        uses: actions/download-artifact@v7
+        with:
+          pattern: report-json-*
+          merge-multiple: true
+          path: cypress/reports
+
       - name: Download all screenshots
         uses: actions/download-artifact@v7
         with:
@@ -145,24 +166,18 @@ jobs:
           path: cypress/screenshots
         continue-on-error: true
 
-      - name: Download all videos
-        uses: actions/download-artifact@v7
-        with:
-          pattern: videos-*
-          merge-multiple: true
-          path: cypress/videos
-        continue-on-error: true
+      - name: Merge reports and generate HTML
+        run: |
+          npx mochawesome-merge cypress/reports/*.json -o cypress/reports/merged.json
+          npx marge cypress/reports/merged.json \
+            --reportDir cypress/reports/html \
+            --reportTitle "TestFlow — Cypress Report" \
+            --charts \
+            --inline
 
-      - name: Publish combined screenshots
+      - name: Publish HTML report
         uses: actions/upload-artifact@v6
         with:
-          name: all-screenshots
-          path: cypress/screenshots
-          if-no-files-found: ignore
-
-      - name: Publish combined videos
-        uses: actions/upload-artifact@v6
-        with:
-          name: all-videos
-          path: cypress/videos
-          if-no-files-found: ignore
+          name: cypress-report
+          path: cypress/reports/html
+          if-no-files-found: warn
