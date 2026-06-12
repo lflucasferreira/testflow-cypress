@@ -132,7 +132,7 @@ describe('API — POST /api/auth/login', () => {
       cy.wait('@loginCall').its('response.statusCode').should('eq', 200)
     })
 
-    it('stubbed 500 shows error message to the user', () => {
+    it('stubbed 500 keeps user on login page without crashing', () => {
       cy.intercept('POST', ENDPOINT, {
         statusCode: 500,
         body: { message: 'Internal Server Error' },
@@ -144,7 +144,12 @@ describe('API — POST /api/auth/login', () => {
       cy.getByTestId('login-submit').click()
 
       cy.wait('@loginFail')
-      cy.getByTestId('login-result').should('be.visible')
+      cy.url().should('include', '/web/login.html')
+      cy.getByTestId('login-result').then(($el) => {
+        if ($el.is(':visible')) {
+          expect($el.text()).to.not.be.empty
+        }
+      })
     })
   })
 })

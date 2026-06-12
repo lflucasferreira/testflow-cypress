@@ -75,13 +75,13 @@ describe('API — Users & Health', () => {
     })
 
     it('Team page triggers GET /api/users on load', () => {
-      cy.intercept('GET', '/api/users').as('loadUsers')
+      cy.intercept('GET', /\/api\/users/).as('loadUsers')
       cy.reload()
       cy.wait('@loadUsers').its('response.statusCode').should('eq', 200)
     })
 
     it('stubbed empty users list shows zero rows', () => {
-      cy.intercept('GET', '/api/users', {
+      cy.intercept('GET', /\/api\/users/, {
         statusCode: 200,
         body: { users: [] },
       }).as('emptyUsers')
@@ -92,7 +92,7 @@ describe('API — Users & Health', () => {
     })
 
     it('stubbed API error shows fallback state', () => {
-      cy.intercept('GET', '/api/users', {
+      cy.intercept('GET', /\/api\/users/, {
         statusCode: 500,
         body: { message: 'Internal Server Error' },
       }).as('failUsers')
