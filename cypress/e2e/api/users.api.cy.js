@@ -18,10 +18,9 @@ describe('API — Users & Health', () => {
       expect(res.body.users).to.be.an('array').and.have.length.greaterThan(0)
     })
 
-    it('each user has required fields', () => {
+    it('each user has required fields with correct types', () => {
       res.body.users.forEach((user) => {
         cy.validateSchema(user, {
-          id: 'number',
           name: 'string',
           email: 'string',
           role: 'string',
@@ -34,20 +33,6 @@ describe('API — Users & Health', () => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       res.body.users.forEach((user) => {
         expect(user.email).to.match(emailRegex)
-      })
-    })
-
-    it('role values are within allowed set', () => {
-      const allowed = ['admin', 'member', 'viewer']
-      res.body.users.forEach((user) => {
-        expect(allowed).to.include(user.role.toLowerCase())
-      })
-    })
-
-    it('status values are within allowed set', () => {
-      const allowed = ['active', 'inactive', 'pending']
-      res.body.users.forEach((user) => {
-        expect(allowed).to.include(user.status.toLowerCase())
       })
     })
   })

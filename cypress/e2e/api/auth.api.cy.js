@@ -124,7 +124,7 @@ describe('API — POST /api/auth/login', () => {
       cy.intercept('POST', ENDPOINT).as('loginCall')
 
       cy.visit('/web/login.html')
-      cy.getByTestId('use-api-checkbox').check()
+      cy.getByTestId('login-use-api').check()
       cy.getByTestId('login-email').type(VALID.email)
       cy.getByTestId('login-password').type(VALID.password, { log: false })
       cy.getByTestId('login-submit').click()
