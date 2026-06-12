@@ -81,21 +81,23 @@ describe('Team', () => {
   })
 
   context('Sorting', () => {
-    it('sorts rows by name ascending on first click', () => {
+    it('sorts rows by name descending on first click', () => {
       TeamPage.sortByName()
-      TeamPage.nameCell(1).invoke('text').then((first) => {
-        TeamPage.nameCell(2).invoke('text').then((second) => {
-          expect(first.localeCompare(second)).to.be.lessThan(1)
-        })
+      TeamPage.tableRows().then(($rows) => {
+        const names = [...$rows].map((r) =>
+          (r.querySelector('[data-testid^="cell-name-"]')?.textContent ?? '').trim()
+        )
+        expect(names).to.deep.eq([...names].sort((a, b) => b.localeCompare(a)))
       })
     })
 
-    it('reverses sort order on second click', () => {
+    it('second click sorts rows by name ascending', () => {
       TeamPage.sortByName().sortByName()
-      TeamPage.nameCell(4).invoke('text').then((last) => {
-        TeamPage.nameCell(1).invoke('text').then((first) => {
-          expect(last.localeCompare(first)).to.be.lessThan(1)
-        })
+      TeamPage.tableRows().then(($rows) => {
+        const names = [...$rows].map((r) =>
+          (r.querySelector('[data-testid^="cell-name-"]')?.textContent ?? '').trim()
+        )
+        expect(names).to.deep.eq([...names].sort((a, b) => a.localeCompare(b)))
       })
     })
   })
