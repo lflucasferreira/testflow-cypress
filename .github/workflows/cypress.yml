@@ -86,12 +86,20 @@ jobs:
       - name: Run Cypress — ${{ matrix.suite }}
         run: npm run cy:run:${{ matrix.suite }}
 
+      - name: Rename JSON report
+        if: always()
+        run: |
+          src=$(find cypress/reports -name '*.json' 2>/dev/null | head -1)
+          if [ -n "$src" ]; then
+            mv "$src" "cypress/reports/${{ matrix.suite }}.json"
+          fi
+
       - name: Upload JSON report
         if: always()
         uses: actions/upload-artifact@v6
         with:
           name: report-json-${{ matrix.suite }}
-          path: cypress/reports
+          path: cypress/reports/${{ matrix.suite }}.json
           if-no-files-found: ignore
 
       - name: Upload screenshots on failure
