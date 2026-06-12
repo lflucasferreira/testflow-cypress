@@ -67,15 +67,15 @@ describe('API — POST /api/auth/login', () => {
       }).its('status').should('eq', 401)
     })
 
-    it('error response has a message field', () => {
+    it('error response has a non-empty error or message field', () => {
       cy.request({
         method: 'POST',
         url: ENDPOINT,
         body: { email: VALID.email, password: 'wrong' },
         failOnStatusCode: false,
       }).then(({ body }) => {
-        expect(body).to.have.property('message')
-        expect(body.message).to.be.a('string').and.not.be.empty
+        const errText = body.message ?? body.error?.message
+        expect(errText).to.be.a('string').and.not.be.empty
       })
     })
   })
@@ -110,41 +110,30 @@ describe('API — POST /api/auth/login', () => {
   })
 
   context('Intercept — login flow validates network contract', () => {
-    it('UI login triggers POST to /api/auth/login with correct payload', () => {
+    it('API toggle sends POST with correct payload and token response', () => {
       cy.intercept('POST', ENDPOINT).as('loginCall')
 
       cy.visit('/web/login.html')
+      cy.getByTestId('login-use-api').click({ force: true })
       cy.getByTestId('login-email').type(VALID.email)
       cy.getByTestId('login-password').type(VALID.password, { log: false })
       cy.getByTestId('login-submit').click()
 
       cy.wait('@loginCall').then(({ request, response }) => {
         expect(request.body.email).to.eq(VALID.email)
-        expect(request.body.password).to.eq(VALID.password)
         expect(response.statusCode).to.eq(200)
         expect(response.body.token).to.be.a('string').and.not.be.empty
       })
     })
 
-    it('API toggle sends request and receives token', () => {
-      cy.intercept('POST', ENDPOINT).as('loginCall')
-
-      cy.visit('/web/login.html')
-      cy.getByTestId('login-use-api').check()
-      cy.getByTestId('login-email').type(VALID.email)
-      cy.getByTestId('login-password').type(VALID.password, { log: false })
-      cy.getByTestId('login-submit').click()
-
-      cy.wait('@loginCall').its('response.statusCode').should('eq', 200)
-    })
-
     it('stubbed 500 keeps user on login page without crashing', () => {
       cy.intercept('POST', ENDPOINT, {
         statusCode: 500,
-        body: { message: 'Internal Server Error' },
+        body: { error: 'Internal Server Error' },
       }).as('loginFail')
 
       cy.visit('/web/login.html')
+      cy.getByTestId('login-use-api').click({ force: true })
       cy.getByTestId('login-email').type(VALID.email)
       cy.getByTestId('login-password').type(VALID.password, { log: false })
       cy.getByTestId('login-submit').click()

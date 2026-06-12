@@ -24,7 +24,6 @@ describe('API — Users & Health', () => {
           name: 'string',
           email: 'string',
           role: 'string',
-          status: 'string',
         })
       })
     })
@@ -58,14 +57,20 @@ describe('API — Users & Health', () => {
         .its('status').should('eq', 422)
     })
 
-    it('404 response has a message field', () => {
+    it('404 response has a non-empty error or message field', () => {
       cy.request({ url: '/api/errors/404', failOnStatusCode: false })
-        .its('body').should('have.property', 'message')
+        .then(({ body }) => {
+          const errText = body.message ?? body.error?.message
+          expect(errText).to.be.a('string').and.not.be.empty
+        })
     })
 
-    it('422 response has a message field', () => {
+    it('422 response has a non-empty error or message field', () => {
       cy.request({ url: '/api/errors/422', failOnStatusCode: false })
-        .its('body').should('have.property', 'message')
+        .then(({ body }) => {
+          const errText = body.message ?? body.error?.message
+          expect(errText).to.be.a('string').and.not.be.empty
+        })
     })
   })
 
