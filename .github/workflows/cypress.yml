@@ -69,7 +69,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [smoke, auth, dashboard, team, settings, components]
+        suite: [api, smoke, auth, dashboard, team, settings, components]
     steps:
       - name: Checkout test suite
         uses: actions/checkout@v5

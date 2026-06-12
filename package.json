@@ -7,6 +7,7 @@
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "cy:run:headed": "cypress run --headed",
+    "cy:run:api": "cypress run --spec 'cypress/e2e/api/**'",
     "cy:run:smoke": "cypress run --spec 'cypress/e2e/smoke/**'",
     "cy:run:auth": "cypress run --spec 'cypress/e2e/auth/**'",
     "cy:run:dashboard": "cypress run --spec 'cypress/e2e/dashboard/**'",

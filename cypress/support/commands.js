@@ -68,6 +68,47 @@ Cypress.Commands.add('visitAuthenticated', (path) => {
   })
 })
 
+// ─── API helpers ───────────────────────────────────────────────────────────────
+
+/**
+ * Authenticated cy.request — fetches a token and attaches it as Bearer header.
+ * Usage: cy.apiRequest({ method: 'GET', url: '/api/users' })
+ */
+Cypress.Commands.add('apiRequest', (options) => {
+  cy.request({
+    method: 'POST',
+    url: '/api/auth/login',
+    body: {
+      email: Cypress.env('DEMO_EMAIL'),
+      password: Cypress.env('DEMO_PASSWORD'),
+    },
+  }).then(({ body }) => {
+    cy.request({
+      ...options,
+      headers: {
+        Authorization: `Bearer ${body.token}`,
+        ...options.headers,
+      },
+    })
+  })
+})
+
+/**
+ * Assert that an object contains expected keys with expected types.
+ * schema: { key: 'string' | 'number' | 'boolean' | 'array' | 'object' }
+ * Usage: cy.validateSchema(responseBody, { id: 'number', name: 'string' })
+ */
+Cypress.Commands.add('validateSchema', (obj, schema) => {
+  Object.entries(schema).forEach(([key, type]) => {
+    expect(obj, 'response body').to.have.property(key)
+    if (type === 'array') {
+      expect(obj[key], `"${key}"`).to.be.an('array')
+    } else {
+      expect(typeof obj[key], `"${key}" should be ${type}`).to.eq(type)
+    }
+  })
+})
+
 // ─── Table helpers ─────────────────────────────────────────────────────────────
 
 /** Return all visible tbody rows of a table */
