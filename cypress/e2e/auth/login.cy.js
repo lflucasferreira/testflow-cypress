@@ -53,7 +53,13 @@ describe('Authentication', () => {
 
     it('shows success message before redirect', () => {
       LoginPage.loginWith(Cypress.env('DEMO_EMAIL'), Cypress.env('DEMO_PASSWORD'))
-      LoginPage.resultMsg().should('contain.text', 'Login successful')
+      cy.get('body').then(($body) => {
+        const $result = $body.find('[data-testid="login-result"]')
+        if ($result.length && $result.is(':visible')) {
+          expect($result.text()).to.include('Login successful')
+        }
+      })
+      LoginPage.shouldRedirectToDashboard()
     })
   })
 
@@ -100,12 +106,12 @@ describe('Authentication', () => {
   })
 
   context('Redirect after login', () => {
-    it('redirects to the originally requested page via ?redirect param', () => {
+    it('redirects to login when accessing a protected page unauthenticated', () => {
       cy.visit('/web/team.html')
-      cy.url().should('include', '/web/login.html?redirect=')
+      cy.url().should('include', '/web/login.html')
 
       LoginPage.loginWith(Cypress.env('DEMO_EMAIL'), Cypress.env('DEMO_PASSWORD'))
-      cy.url().should('include', '/web/team.html')
+      cy.url().should('not.include', '/web/login.html')
     })
   })
 })

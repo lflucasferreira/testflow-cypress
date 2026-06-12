@@ -1,8 +1,7 @@
 {
   "new": {
     "name": "Grace SDET",
-    "email": "grace@testflow.io",
-    "role": "sdet"
+    "email": "grace@testflow.io"
   },
   "duplicate": {
     "name": "Alice QA",
