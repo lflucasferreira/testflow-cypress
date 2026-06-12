@@ -83,8 +83,16 @@ jobs:
           path: ~/.cache/Cypress
           key: cypress-bin-${{ hashFiles('package-lock.json') }}
 
+      - name: Verify TestFlow is reachable
+        continue-on-error: true
+        run: curl -sf http://localhost:5050/health && echo "TestFlow OK" || echo "TestFlow not reachable"
+
       - name: Run Cypress — ${{ matrix.suite }}
         run: npm run cy:run:${{ matrix.suite }}
+
+      - name: List report files
+        if: always()
+        run: find cypress/reports -type f 2>/dev/null || echo "cypress/reports not found"
 
       - name: Rename JSON report
         if: always()
@@ -92,6 +100,9 @@ jobs:
           src=$(find cypress/reports -name '*.json' 2>/dev/null | head -1)
           if [ -n "$src" ]; then
             mv "$src" "cypress/reports/${{ matrix.suite }}.json"
+            echo "Renamed $src → cypress/reports/${{ matrix.suite }}.json"
+          else
+            echo "No JSON report found"
           fi
 
       - name: Upload JSON report
@@ -138,17 +149,18 @@ jobs:
           pattern: report-json-*
           merge-multiple: true
           path: cypress/reports
-
-      - name: Download all screenshots
-        uses: actions/download-artifact@v7
-        with:
-          pattern: screenshots-*
-          merge-multiple: true
-          path: cypress/screenshots
         continue-on-error: true
+
+      - name: List downloaded files
+        run: find cypress/reports -type f 2>/dev/null || echo "cypress/reports not found"
 
       - name: Merge reports and generate HTML
         run: |
+          jsons=$(find cypress/reports -name '*.json' 2>/dev/null)
+          if [ -z "$jsons" ]; then
+            echo "No JSON reports found — check test job logs for failures"
+            exit 1
+          fi
           npx mochawesome-merge cypress/reports/*.json -o cypress/reports/merged.json
           npx marge cypress/reports/merged.json \
             --reportDir cypress/reports/html \
@@ -157,8 +169,9 @@ jobs:
             --inline
 
       - name: Publish HTML report
+        if: always()
         uses: actions/upload-artifact@v6
         with:
           name: cypress-report
           path: cypress/reports/html
-          if-no-files-found: warn
+          if-no-files-found: ignore
