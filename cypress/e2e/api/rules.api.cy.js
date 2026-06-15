@@ -1,7 +1,8 @@
-const { JsonPatchBuilder, modifyPatchField } = require('../../support/utilities/jsonPatchUtils')
-const { ApiTestPatterns } = require('../../support/utilities/testPatterns')
-const { UserPatchFactory } = require('../../support/factories')
-const { HTTP_STATUS } = require('../../support/@enums/httpStatus')
+import { JsonPatchBuilder, modifyPatchField } from '../../support/utilities/jsonPatchUtils'
+import { ApiTestPatterns } from '../../support/utilities/testPatterns'
+import { UserPatchFactory } from '../../support/factories'
+import { HTTP_STATUS } from '../../support/@enums/httpStatus'
+import { TC, tc } from '../../support/@enums/testCases'
 
 describe('API — Rules engine patterns (TestFlow adapted)', { tags: '@api @regression' }, () => {
   before(() => {
@@ -48,7 +49,7 @@ describe('API — Rules engine patterns (TestFlow adapted)', { tags: '@api @regr
       cy.seedAuthToken()
     })
 
-    it('[TC] patches user and validates read-after-write with retry', () => {
+    it(tc(TC.API_PATCH_READ_AFTER_WRITE, 'patches user and validates read-after-write with retry'), () => {
       const uniqueName = `PatchFlow ${Date.now()}`
       const patches = UserPatchFactory.createSimpleNamePatch(uniqueName)
 
@@ -79,7 +80,7 @@ describe('API — Rules engine patterns (TestFlow adapted)', { tags: '@api @regr
       cy.section('Read profile data')
       ApiTestPatterns.executeSuccessfulGetFlow('/api/users', (body) => {
         expect(body.users).to.be.an('array').and.have.length.greaterThan(0)
-        cy.validateSchema(body.users[0], { name: 'string', email: 'string', role: 'string' })
+        cy.validateJsonSchema(body.users[0], 'user.json')
       })
     })
   })

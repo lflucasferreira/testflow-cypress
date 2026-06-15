@@ -2,7 +2,14 @@ const { defineConfig } = require('cypress')
 const { loadConfig } = require('./cypress/support/loadConfig')
 const { registerTasks } = require('./cypress/support/tasks')
 
+const isCI = Boolean(process.env.CI)
+
 module.exports = defineConfig({
+  expose: {
+    grepFilterSpecs: true,
+    grepOmitFiltered: true,
+  },
+
   reporter: 'cypress-mochawesome-reporter',
   reporterOptions: {
     charts: true,
@@ -40,7 +47,7 @@ module.exports = defineConfig({
     pageLoadTimeout: 120000,
 
     retries: {
-      runMode: 2,
+      runMode: isCI ? 2 : 0,
       openMode: 0,
     },
 
@@ -71,12 +78,10 @@ module.exports = defineConfig({
   },
 
   env: {
-    DEMO_EMAIL: 'demo@automation.io',
-    DEMO_PASSWORD: 'Demo123!',
+    DEMO_EMAIL: process.env.CYPRESS_DEMO_EMAIL || 'demo@automation.io',
+    DEMO_PASSWORD: process.env.CYPRESS_DEMO_PASSWORD || process.env.DEMO_PASSWORD || 'Demo123!',
     BASE_URL: 'http://localhost:5050',
     ENV: 'local',
-    grepFilterSpecs: true,
-    grepOmitFiltered: true,
     sessionCacheAcrossSpecs: true,
   },
 })

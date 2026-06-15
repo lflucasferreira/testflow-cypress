@@ -1,4 +1,5 @@
 import LoginPage from '../../pages/LoginPage'
+import { TC, tc } from '../../support/@enums/testCases'
 
 describe('Authentication', { tags: '@regression' }, () => {
   beforeEach(() => {
@@ -6,7 +7,7 @@ describe('Authentication', { tags: '@regression' }, () => {
   })
 
   context('Page structure', () => {
-    it('renders all form elements', () => {
+    it(tc(TC.AUTH_LOGIN_FORM, 'renders all form elements'), () => {
       LoginPage.emailInput().should('be.visible')
       LoginPage.passwordInput().should('be.visible')
       LoginPage.submitBtn().should('be.visible').and('not.be.disabled')
@@ -24,7 +25,7 @@ describe('Authentication', { tags: '@regression' }, () => {
   })
 
   context('Valid credentials', () => {
-    it('logs in via UI and redirects to dashboard', { tags: '@smoke @critical' }, () => {
+    it(tc(TC.AUTH_LOGIN_SUCCESS, 'logs in via UI and redirects to dashboard'), { tags: '@smoke @critical' }, () => {
       LoginPage
         .loginWith(Cypress.env('DEMO_EMAIL'), Cypress.env('DEMO_PASSWORD'))
         .shouldRedirectToDashboard()

@@ -1,6 +1,6 @@
 import TeamPage from '../../pages/TeamPage'
-const { TeamMemberFactory } = require('../../support/factories')
-const { SHARED } = require('../../support/elements')
+import { TeamMemberFactory } from '../../support/factories'
+import { SHARED } from '../../support/elements'
 
 describe('Team', { tags: '@regression' }, () => {
   beforeEach(() => {

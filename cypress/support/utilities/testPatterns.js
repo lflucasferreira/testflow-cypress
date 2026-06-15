@@ -39,8 +39,9 @@ class ApiTestPatterns {
   }
 
   static generateMandatoryFieldTests(fieldPaths, basePatch, tryPatchCommand, userId = 1) {
-    fieldPaths.forEach((path) => {
-      it(`[TC] rejects null at ${path}`, () => {
+    fieldPaths.forEach((path, index) => {
+      const tcId = `TC-${4001 + index}`
+      it(`[${tcId}] rejects null at ${path}`, () => {
         const modified = modifyPatchField(basePatch, path, null)
         ApiTestPatterns.executeValidationFailureTest(modified, tryPatchCommand, userId)
       })

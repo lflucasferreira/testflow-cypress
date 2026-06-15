@@ -1,5 +1,5 @@
 import WizardPage from '../../pages/WizardPage'
-const { WizardDataFactory } = require('../../support/factories')
+import { WizardDataFactory } from '../../support/factories'
 
 describe('Wizard — multi-step flow', { tags: '@regression' }, () => {
   beforeEach(() => {

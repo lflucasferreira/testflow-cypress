@@ -10,6 +10,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CI: true
+  CYPRESS_DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+
 jobs:
   # ── Stage 1: install test suite dependencies and populate caches ──────────
   setup:
@@ -72,11 +76,83 @@ jobs:
           path: ~/.cache/Cypress
           key: cypress-bin-${{ hashFiles('package-lock.json') }}
       - run: npm run cy:run:smoke
+
+      - name: Rename JSON report
+        if: always()
+        run: |
+          src=$(find cypress/reports -name '*.json' 2>/dev/null | head -1)
+          if [ -n "$src" ]; then
+            mv "$src" "cypress/reports/smoke-gate.json"
+          fi
+
+      - name: Upload JSON report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: report-json-smoke-gate
+          path: cypress/reports/smoke-gate.json
+          if-no-files-found: ignore
+
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v6
         with:
           name: screenshots-smoke
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+  # ── Stage 2b: regression gate (grep @regression) ──────────────────────────
+  regression:
+    name: Cypress — regression (@regression)
+    runs-on: ubuntu-latest
+    needs: setup
+    timeout-minutes: 45
+    services:
+      testflow:
+        image: qaschool/testflow:latest
+        ports:
+          - 5050:5050
+        options: >-
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 6
+          --health-start-period 90s
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: tests-${{ hashFiles('package-lock.json') }}
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-bin-${{ hashFiles('package-lock.json') }}
+      - run: npm run cy:run:regression
+
+      - name: Rename JSON report
+        if: always()
+        run: |
+          src=$(find cypress/reports -name '*.json' 2>/dev/null | head -1)
+          if [ -n "$src" ]; then
+            mv "$src" "cypress/reports/regression-gate.json"
+          fi
+
+      - name: Upload JSON report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: report-json-regression-gate
+          path: cypress/reports/regression-gate.json
+          if-no-files-found: ignore
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: screenshots-regression
           path: cypress/screenshots
           if-no-files-found: ignore
 
@@ -175,11 +251,45 @@ jobs:
           key: tests-${{ hashFiles('package-lock.json') }}
       - run: npm run cy:run:component
 
-  # ── Stage 3: merge JSONs and generate combined HTML report ───────────────
+  visual:
+    name: Percy — visual regression
+    runs-on: ubuntu-latest
+    needs: setup
+    timeout-minutes: 20
+    services:
+      testflow:
+        image: qaschool/testflow:latest
+        ports:
+          - 5050:5050
+        options: >-
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 6
+          --health-start-period 90s
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: tests-${{ hashFiles('package-lock.json') }}
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-bin-${{ hashFiles('package-lock.json') }}
+      - name: Run Percy visual tests
+        run: npm run cy:run:visual:percy
+        env:
+          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+        continue-on-error: true
+
+  # ── Stage 4: merge JSONs and generate combined HTML report ───────────────
   report:
     name: Generate HTML report
     runs-on: ubuntu-latest
-    needs: [test, smoke]
+    needs: [test, smoke, regression]
     if: always()
     timeout-minutes: 5
     steps:

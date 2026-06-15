@@ -18,13 +18,9 @@ describe('API — Users & Health', { tags: '@api @regression' }, () => {
       expect(res.body.users).to.be.an('array').and.have.length.greaterThan(0)
     })
 
-    it('each user has required fields with correct types', () => {
+    it('each user matches JSON Schema', () => {
       res.body.users.forEach((user) => {
-        cy.validateSchema(user, {
-          name: 'string',
-          email: 'string',
-          role: 'string',
-        })
+        cy.validateJsonSchema(user, 'user.json')
       })
     })
 

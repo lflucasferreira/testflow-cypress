@@ -133,12 +133,11 @@ describe('Dashboard', { tags: '@regression' }, () => {
 
     links.forEach(({ testId, path }) => {
       it(`"${testId}" navigates to ${path}`, () => {
+        cy.visitWithSession('/web/dashboard.html')
+        DashboardPage.shouldBeLoaded()
         cy.getByTestId(testId).click()
         cy.url().should('include', path)
       })
-
-      // Go back for next iteration
-      afterEach(() => cy.go('back'))
     })
   })
 

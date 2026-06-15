@@ -16,8 +16,9 @@ declare namespace Cypress {
     visitWithSession(path?: string): Chainable<void>
     apiRequest(options: Partial<Cypress.RequestOptions>): Chainable<Cypress.Response<unknown>>
     apiWithAuth(options: Partial<Cypress.RequestOptions>): Chainable<Cypress.Response<unknown>>
-    validateSchema(obj: object, schema: Record<string, string>): Chainable<void>
-    assertResponseShape(obj: object, schema: Record<string, string>): Chainable<void>
+    validateSchema(obj: object, schema: Record<string, string> | string): Chainable<void>
+    validateJsonSchema(obj: object, schemaName: string): Chainable<void>
+    assertResponseShape(obj: object, schema: Record<string, string> | string): Chainable<void>
     getTableRows(tableTestId?: string): Chainable<JQuery<HTMLElement>>
     getTableCell(rowId: string | number, field: string): Chainable<JQuery<HTMLElement>>
     checkA11yPage(context?: string | Node | Cypress.Chainable, options?: object): Chainable<void>

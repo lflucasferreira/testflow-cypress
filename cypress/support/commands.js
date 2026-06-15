@@ -147,14 +147,19 @@ Cypress.Commands.add('apiRequest', (options) => {
 
 Cypress.Commands.add('apiWithAuth', (options) => cy.apiRequest(options))
 
+const { validateWithSchema, validateShorthand } = require('./schemaValidator')
+
 Cypress.Commands.add('validateSchema', (obj, schema) => {
-  Object.entries(schema).forEach(([key, type]) => {
-    expect(obj, 'response body').to.have.property(key)
-    if (type === 'array') {
-      expect(obj[key], `"${key}"`).to.be.an('array')
-    } else {
-      expect(typeof obj[key], `"${key}" should be ${type}`).to.eq(type)
-    }
+  if (typeof schema === 'string') {
+    cy.validateJsonSchema(obj, schema)
+    return
+  }
+  validateShorthand(obj, schema)
+})
+
+Cypress.Commands.add('validateJsonSchema', (obj, schemaName) => {
+  cy.fixture(`schemas/${schemaName}`).then((schema) => {
+    validateWithSchema(obj, schema)
   })
 })
 

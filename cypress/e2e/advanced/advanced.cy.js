@@ -1,5 +1,5 @@
 import AdvancedPage from '../../pages/AdvancedPage'
-const { VIEWPORTS } = require('../../support/@enums/viewports')
+import { VIEWPORTS } from '../../support/@enums/viewports'
 
 describe('Advanced — iframe, shadow DOM, external links', { tags: '@regression' }, () => {
   beforeEach(() => {

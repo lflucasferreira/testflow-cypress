@@ -3,6 +3,7 @@ require('cypress-axe')
 require('cypress-mochawesome-reporter/register')
 require('cypress-plugin-steps')
 require('@bahmutov/cy-grep')()
+require('@percy/cypress')
 
 Cypress.on('uncaught:exception', (err) => {
   if (err.message.includes('sessionStorage') || err.message.includes('ResizeObserver')) {

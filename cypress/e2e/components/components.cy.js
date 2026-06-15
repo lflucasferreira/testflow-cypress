@@ -1,3 +1,5 @@
+import { TC, tc } from '../../support/@enums/testCases'
+
 describe('Components', { tags: '@regression' }, () => {
   beforeEach(() => {
     cy.visitWithSession('/web/components.html')
@@ -17,11 +19,13 @@ describe('Components', { tags: '@regression' }, () => {
         .and('have.css', 'cursor', 'not-allowed')
     })
 
-    it('loading button shows spinner during simulated load', () => {
+    it(tc(TC.COMP_LOADING_BUTTON, 'loading button shows spinner during simulated load'), () => {
+      cy.clock()
       cy.getByTestId('btn-loading').click()
       cy.getByTestId('btn-loading').should('be.disabled')
       cy.get('.spinner').should('be.visible')
-      cy.getByTestId('btn-loading', { timeout: 5000 }).should('not.be.disabled')
+      cy.tick(2000)
+      cy.getByTestId('btn-loading').should('not.be.disabled')
     })
 
     it('toast button shows a toast notification', () => {
