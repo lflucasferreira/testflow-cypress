@@ -1,13 +1,13 @@
 import DashboardPage from '../../pages/DashboardPage'
 
-describe('Dashboard', () => {
+describe('Dashboard', { tags: '@regression' }, () => {
   beforeEach(() => {
-    cy.loginViaApi()
+    cy.visitWithSession('/web/dashboard.html')
     DashboardPage.shouldBeLoaded()
   })
 
   context('Greeting', () => {
-    it('shows time-based greeting with the user name', () => {
+    it('shows time-based greeting with the user name', { tags: '@smoke' }, () => {
       DashboardPage.shouldShowGreeting()
       DashboardPage.greeting().should('contain.text', 'Demo User')
     })
@@ -109,7 +109,7 @@ describe('Dashboard', () => {
 
     it('closes modal on overlay click', () => {
       DashboardPage.openNewRunModal()
-      cy.getByTestId('run-modal-overlay').click({ force: true })
+      cy.getByTestId('run-modal-overlay').click('topLeft')
       DashboardPage.shouldShowRunModalClosed()
     })
 
@@ -139,6 +139,12 @@ describe('Dashboard', () => {
 
       // Go back for next iteration
       afterEach(() => cy.go('back'))
+    })
+  })
+
+  context('Accessibility', () => {
+    it('dashboard has no critical a11y violations', { tags: '@a11y' }, () => {
+      cy.checkA11yPage(undefined, { preset: 'critical' })
     })
   })
 })

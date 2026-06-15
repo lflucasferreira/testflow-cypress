@@ -1,6 +1,6 @@
-describe('Components', () => {
+describe('Components', { tags: '@regression' }, () => {
   beforeEach(() => {
-    cy.visitAuthenticated('/web/components.html')
+    cy.visitWithSession('/web/components.html')
     cy.getByTestId('page-components').should('exist')
   })
 
@@ -66,18 +66,18 @@ describe('Components', () => {
     })
 
     it('closes on Confirm button', () => {
-      cy.getByTestId('modal-confirm-btn').click()
+      cy.clickDialogConfirm()
       cy.getByTestId('modal-overlay').should('not.be.visible')
-      cy.getByTestId('toast-message').should('be.visible')
+      cy.getByHook('toast-message').should('be.visible')
     })
 
     it('closes on Cancel button', () => {
-      cy.getByTestId('modal-cancel-btn').click()
+      cy.clickDialogCancel()
       cy.getByTestId('modal-overlay').should('not.be.visible')
     })
 
     it('closes on close (✕) button', () => {
-      cy.getByTestId('modal-close-btn').click()
+      cy.clickDialogClose()
       cy.getByTestId('modal-overlay').should('not.be.visible')
     })
 
@@ -87,7 +87,7 @@ describe('Components', () => {
     })
 
     it('closes on overlay background click', () => {
-      cy.getByTestId('modal-overlay').click({ force: true })
+      cy.getByTestId('modal-overlay').click('topLeft')
       cy.getByTestId('modal-overlay').should('not.be.visible')
     })
 
@@ -127,6 +127,12 @@ describe('Components', () => {
       cy.get('[role="tab"]').should('have.length', 3)
       cy.get('[role="tabpanel"]').should('have.length', 3)
     })
+
+    it('supports keyboard focus on tab controls', () => {
+      cy.getByTestId('tab-overview').should('have.attr', 'aria-selected', 'true')
+      cy.getByTestId('tab-cypress').focus().should('be.focused').click()
+      cy.getByTestId('tab-panel-cypress').should('be.visible')
+    })
   })
 
   context('Accordion', () => {
@@ -155,6 +161,18 @@ describe('Components', () => {
       cy.getByTestId('accordion-trigger-2').click()
       cy.getByTestId('accordion-panel-1').should('be.visible')
       cy.getByTestId('accordion-panel-2').should('be.visible')
+    })
+  })
+
+  context('Accessibility', () => {
+    it('components page has no critical a11y violations', { tags: '@a11y' }, () => {
+      cy.checkA11yPage(undefined, { preset: 'critical' })
+    })
+
+    it('modal dialog passes a11y when open', { tags: '@a11y' }, () => {
+      cy.getByTestId('open-modal-btn').click()
+      cy.getByTestId('modal-overlay').should('be.visible')
+      cy.checkA11yPage('[data-testid="modal-overlay"]', { preset: 'critical' })
     })
   })
 })

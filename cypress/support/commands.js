@@ -2,19 +2,29 @@
 
 /** Shorthand for cy.get('[data-testid="..."]') */
 Cypress.Commands.add('getByTestId', (testId, options) =>
-  cy.get(`[data-testid="${testId}"]`, options)
+  cy.get(`[data-testid="${testId}"]`, options),
 )
 
-/** Assert a testid element does NOT exist in the DOM */
+/** Slides convention — matches data-cy-hook OR data-testid */
+Cypress.Commands.add('getByHook', (hook, options) =>
+  cy.get(`[data-cy-hook="${hook}"], [data-testid="${hook}"]`, options),
+)
+
+Cypress.Commands.add('assertHookVisible', (hook) =>
+  cy.getByHook(hook).should('be.visible'),
+)
+
+Cypress.Commands.add('assertHookMissing', (hook) =>
+  cy.getByHook(hook).should('not.exist'),
+)
+
+/** @deprecated use assertHookMissing */
 Cypress.Commands.add('shouldNotExistByTestId', (testId) =>
-  cy.get(`[data-testid="${testId}"]`).should('not.exist')
+  cy.get(`[data-testid="${testId}"]`).should('not.exist'),
 )
 
 // ─── Auth ──────────────────────────────────────────────────────────────────────
 
-/**
- * Full UI login — use when the login flow itself is under test.
- */
 Cypress.Commands.add('login', (
   email = Cypress.env('DEMO_EMAIL'),
   password = Cypress.env('DEMO_PASSWORD'),
@@ -26,16 +36,16 @@ Cypress.Commands.add('login', (
   cy.getByTestId('page-dashboard').should('exist')
 })
 
-/**
- * Programmatic login via API — use in beforeEach for non-auth tests (faster).
- * Sets sessionStorage directly so the app considers the user authenticated.
- */
+/** Alias matching slides naming */
+Cypress.Commands.add('signInViaUI', (email, password) => cy.login(email, password))
+
 Cypress.Commands.add('loginViaApi', (
   email = Cypress.env('DEMO_EMAIL'),
   password = Cypress.env('DEMO_PASSWORD'),
 ) => {
-  cy.request({ method: 'POST', url: '/api/auth/login', body: { email, password } })
+  cy.request({ method: 'POST', url: '/api/auth/login', body: { email, password }, log: false })
     .then(({ body }) => {
+      Cypress.env('AUTH_TOKEN', body.token)
       cy.visit('/web/dashboard.html', {
         onBeforeLoad(win) {
           win.sessionStorage.setItem(
@@ -48,19 +58,28 @@ Cypress.Commands.add('loginViaApi', (
     })
 })
 
-/**
- * Navigate to any protected page with auth pre-set (skips dashboard).
- */
+Cypress.Commands.add('signInViaAPI', (email, password) => cy.loginViaApi(email, password))
+
 Cypress.Commands.add('visitAuthenticated', (path) => {
-  cy.request({ method: 'POST', url: '/api/auth/login', body: {
-    email: Cypress.env('DEMO_EMAIL'),
-    password: Cypress.env('DEMO_PASSWORD'),
-  }}).then(({ body }) => {
+  cy.request({
+    method: 'POST',
+    url: '/api/auth/login',
+    body: {
+      email: Cypress.env('DEMO_EMAIL'),
+      password: Cypress.env('DEMO_PASSWORD'),
+    },
+    log: false,
+  }).then(({ body }) => {
+    Cypress.env('AUTH_TOKEN', body.token)
     cy.visit(path, {
       onBeforeLoad(win) {
         win.sessionStorage.setItem(
           'sandbox-auth',
-          JSON.stringify({ email: Cypress.env('DEMO_EMAIL'), name: body.user?.name ?? 'Demo User', token: body.token }),
+          JSON.stringify({
+            email: Cypress.env('DEMO_EMAIL'),
+            name: body.user?.name ?? 'Demo User',
+            token: body.token,
+          }),
         )
         win.sessionStorage.setItem('sandbox-token', body.token)
       },
@@ -68,12 +87,43 @@ Cypress.Commands.add('visitAuthenticated', (path) => {
   })
 })
 
+Cypress.Commands.add('visitAsUser', (path) => cy.visitAuthenticated(path))
+
+Cypress.Commands.add('createAuthSession', (email, password) => {
+  const user = email || Cypress.env('DEMO_EMAIL')
+  const pass = password || Cypress.env('DEMO_PASSWORD')
+  const cacheAcrossSpecs = Cypress.env('sessionCacheAcrossSpecs') !== false
+
+  cy.session(
+    [user, pass, Cypress.env('ENV') || 'local'],
+    () => {
+      cy.seedAuthToken(user, pass)
+      cy.signInViaUI(user, pass)
+      cy.url().should('not.include', '/web/login.html')
+      cy.skipOnboardingTour()
+      cy.getByTestId('page-dashboard').should('exist')
+    },
+    {
+      cacheAcrossSpecs,
+      validate() {
+        cy.window().then((win) => {
+          const auth = win.sessionStorage.getItem('sandbox-auth')
+          if (!auth) throw new Error('Session expired')
+        })
+      },
+    },
+  )
+})
+
+/** Cached auth via cy.session, then navigate to an authenticated page */
+Cypress.Commands.add('visitWithSession', (path = '/web/dashboard.html') => {
+  cy.createAuthSession()
+  cy.visit(path)
+  cy.skipOnboardingTour()
+})
+
 // ─── API helpers ───────────────────────────────────────────────────────────────
 
-/**
- * Authenticated cy.request — fetches a token and attaches it as Bearer header.
- * Usage: cy.apiRequest({ method: 'GET', url: '/api/users' })
- */
 Cypress.Commands.add('apiRequest', (options) => {
   cy.request({
     method: 'POST',
@@ -82,22 +132,21 @@ Cypress.Commands.add('apiRequest', (options) => {
       email: Cypress.env('DEMO_EMAIL'),
       password: Cypress.env('DEMO_PASSWORD'),
     },
+    log: false,
   }).then(({ body }) => {
     cy.request({
       ...options,
       headers: {
         Authorization: `Bearer ${body.token}`,
+        'Correlation-Id': Cypress._.random(0, 1e16).toString(),
         ...options.headers,
       },
     })
   })
 })
 
-/**
- * Assert that an object contains expected keys with expected types.
- * schema: { key: 'string' | 'number' | 'boolean' | 'array' | 'object' }
- * Usage: cy.validateSchema(responseBody, { id: 'number', name: 'string' })
- */
+Cypress.Commands.add('apiWithAuth', (options) => cy.apiRequest(options))
+
 Cypress.Commands.add('validateSchema', (obj, schema) => {
   Object.entries(schema).forEach(([key, type]) => {
     expect(obj, 'response body').to.have.property(key)
@@ -109,14 +158,24 @@ Cypress.Commands.add('validateSchema', (obj, schema) => {
   })
 })
 
+Cypress.Commands.add('assertResponseShape', (obj, schema) => cy.validateSchema(obj, schema))
+
 // ─── Table helpers ─────────────────────────────────────────────────────────────
 
-/** Return all visible tbody rows of a table */
 Cypress.Commands.add('getTableRows', (tableTestId = 'users-table') =>
-  cy.getByTestId(tableTestId).find('tbody tr')
+  cy.getByTestId(tableTestId).find('tbody tr'),
 )
 
-/** Get a specific cell by row id and field testid prefix */
-Cypress.Commands.add('getCell', (rowId, field) =>
-  cy.getByTestId(`cell-${field}-${rowId}`)
+Cypress.Commands.add('getTableCell', (rowId, field) =>
+  cy.getByTestId(`cell-${field}-${rowId}`),
 )
+
+/** @deprecated use getTableCell */
+Cypress.Commands.add('getCell', (rowId, field) => cy.getTableCell(rowId, field))
+
+// ─── Modular command groups ────────────────────────────────────────────────────
+
+require('./commands/interceptions')
+require('./commands/api-setup')
+require('./commands/api-rules')
+require('./commands/actions')

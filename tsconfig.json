@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM"],
+    "types": ["cypress"],
+    "allowJs": true,
+    "checkJs": false,
+    "jsx": "react-jsx",
+    "moduleResolution": "node"
+  },
+  "include": ["cypress/**/*.js", "cypress/**/*.jsx", "cypress/**/*.d.ts"]
+}

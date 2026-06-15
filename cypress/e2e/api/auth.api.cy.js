@@ -1,8 +1,8 @@
 const ENDPOINT = '/api/auth/login'
 const VALID = { email: Cypress.env('DEMO_EMAIL'), password: Cypress.env('DEMO_PASSWORD') }
 
-describe('API — POST /api/auth/login', () => {
-  context('Valid credentials', () => {
+describe('API — POST /api/auth/login', { tags: '@api @regression' }, () => {
+  context('Valid credentials', { tags: '@api' }, () => {
     let res
 
     before(() => {
@@ -10,7 +10,7 @@ describe('API — POST /api/auth/login', () => {
         .then((r) => { res = r })
     })
 
-    it('returns status 200', () => {
+    it('returns status 200', { tags: '@smoke @api' }, () => {
       expect(res.status).to.eq(200)
     })
 
@@ -22,7 +22,7 @@ describe('API — POST /api/auth/login', () => {
       expect(res.duration).to.be.lessThan(2000)
     })
 
-    it('body has token as non-empty string', () => {
+    it('body has token as non-empty string', { tags: '@smoke @api @critical' }, () => {
       expect(res.body.token).to.be.a('string').and.not.be.empty
     })
 
@@ -114,7 +114,7 @@ describe('API — POST /api/auth/login', () => {
       cy.intercept('POST', ENDPOINT).as('loginCall')
 
       cy.visit('/web/login.html')
-      cy.getByTestId('login-use-api').click({ force: true })
+      cy.getByTestId('login-use-api').then(($el) => $el[0].click())
       cy.getByTestId('login-email').type(VALID.email)
       cy.getByTestId('login-password').type(VALID.password, { log: false })
       cy.getByTestId('login-submit').click()
@@ -133,7 +133,7 @@ describe('API — POST /api/auth/login', () => {
       }).as('loginFail')
 
       cy.visit('/web/login.html')
-      cy.getByTestId('login-use-api').click({ force: true })
+      cy.getByTestId('login-use-api').then(($el) => $el[0].click())
       cy.getByTestId('login-email').type(VALID.email)
       cy.getByTestId('login-password').type(VALID.password, { log: false })
       cy.getByTestId('login-submit').click()

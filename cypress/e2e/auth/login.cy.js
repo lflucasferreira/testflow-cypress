@@ -1,6 +1,6 @@
 import LoginPage from '../../pages/LoginPage'
 
-describe('Authentication', () => {
+describe('Authentication', { tags: '@regression' }, () => {
   beforeEach(() => {
     LoginPage.visit()
   })
@@ -24,20 +24,21 @@ describe('Authentication', () => {
   })
 
   context('Valid credentials', () => {
-    it('logs in via UI and redirects to dashboard', () => {
+    it('logs in via UI and redirects to dashboard', { tags: '@smoke @critical' }, () => {
       LoginPage
         .loginWith(Cypress.env('DEMO_EMAIL'), Cypress.env('DEMO_PASSWORD'))
         .shouldRedirectToDashboard()
     })
 
     it('logs in with API toggle enabled', () => {
-      cy.intercept('POST', '/api/auth/login').as('loginRequest')
+      cy.section('Setup intercept')
+      cy.interceptLogin()
 
       LoginPage
         .toggleUseApi()
         .loginWith(Cypress.env('DEMO_EMAIL'), Cypress.env('DEMO_PASSWORD'))
 
-      cy.wait('@loginRequest').its('response.statusCode').should('eq', 200)
+      cy.wait('@loginApi').its('response.statusCode').should('eq', 200)
       LoginPage.shouldRedirectToDashboard()
     })
 
@@ -112,6 +113,12 @@ describe('Authentication', () => {
 
       LoginPage.loginWith(Cypress.env('DEMO_EMAIL'), Cypress.env('DEMO_PASSWORD'))
       cy.url().should('not.include', '/web/login.html')
+    })
+  })
+
+  context('Accessibility', () => {
+    it('login page has no critical a11y violations', { tags: '@a11y' }, () => {
+      cy.checkA11yStandard()
     })
   })
 })

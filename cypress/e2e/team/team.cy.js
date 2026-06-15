@@ -1,8 +1,10 @@
 import TeamPage from '../../pages/TeamPage'
+const { TeamMemberFactory } = require('../../support/factories')
+const { SHARED } = require('../../support/elements')
 
-describe('Team', () => {
+describe('Team', { tags: '@regression' }, () => {
   beforeEach(() => {
-    cy.visitAuthenticated('/web/team.html')
+    cy.visitWithSession('/web/team.html')
     TeamPage.pageRoot().should('exist')
   })
 
@@ -25,10 +27,10 @@ describe('Team', () => {
   })
 
   context('Search', () => {
-    it('filters rows by member name', () => {
-      TeamPage.search('Alice')
-      TeamPage.shouldHaveRowCount(1)
-      TeamPage.nameCell(1).should('contain.text', 'Alice QA')
+    it('filters rows by member name', { tags: '@smoke' }, () => {
+      cy.searchTable('Alice')
+      cy.getTableRows().should('have.length', 1)
+      cy.getTableCell(1, 'name').should('contain.text', 'Alice QA')
     })
 
     it('filters rows by email', () => {
@@ -125,8 +127,10 @@ describe('Team', () => {
   })
 
   context('Invite member modal', () => {
+    let member
+
     beforeEach(() => {
-      cy.fixture('team-member').as('member')
+      member = TeamMemberFactory.createInvite()
     })
 
     it('opens modal on "Invite member" click', () => {
@@ -145,46 +149,54 @@ describe('Team', () => {
       TeamPage.shouldHaveInviteModalClosed()
     })
 
-    it('shows validation error when name is empty', function () {
+    it('shows validation error when name is empty', () => {
       TeamPage.openInviteModal()
-        .fillInviteForm({ email: this.member.new.email })
+        .fillInviteForm({ email: member.email })
         .submitInvite()
         .shouldShowInviteError('required')
     })
 
-    it('shows validation error for invalid email', function () {
+    it('shows validation error for invalid email', () => {
       TeamPage.openInviteModal()
-        .fillInviteForm({ name: this.member.new.name, email: 'notanemail' })
+        .fillInviteForm({ name: member.name, email: 'notanemail' })
         .submitInvite()
         .shouldShowInviteError('valid email')
     })
 
-    it('adds a new row after successful invite', function () {
-      TeamPage.openInviteModal()
-        .fillInviteForm(this.member.new)
-        .submitInvite()
-
-      TeamPage.shouldHaveInviteModalClosed()
-      cy.getByTestId('toast-message').should('contain.text', this.member.new.email)
-      TeamPage.rowCount().invoke('text').then((text) => {
-        expect(parseInt(text)).to.be.greaterThan(6)
+    it('prefills invite form from team-member fixture', () => {
+      cy.fixture('team-member').then(({ new: member }) => {
+        TeamPage.openInviteModal()
+          .fillInviteForm({ name: member.name, email: member.email, role: 'user' })
+        TeamPage.inviteName().should('have.value', member.name)
+        TeamPage.inviteEmail().should('have.value', member.email)
       })
     })
 
-    it('invite request contains name and email in the payload', function () {
-      cy.intercept('POST', '/api/**').as('inviteRequest')
-
+    it('adds a new row after successful invite', { tags: '@critical' }, () => {
+      cy.section('Invite member')
       TeamPage.openInviteModal()
-        .fillInviteForm(this.member.new)
+        .fillInviteForm(member)
         .submitInvite()
 
       TeamPage.shouldHaveInviteModalClosed()
-      cy.getByTestId('toast-message').should('contain.text', this.member.new.email)
+      cy.getByHook(SHARED.toast.testId).should('contain.text', member.email)
+      TeamPage.rowCount().invoke('text').then((text) => {
+        expect(parseInt(text, 10)).to.be.greaterThan(6)
+      })
+    })
 
-      cy.get('@inviteRequest').then((interception) => {
+    it('invite request contains name and email in the payload', () => {
+      cy.interceptInvite()
+
+      TeamPage.openInviteModal()
+        .fillInviteForm(member)
+        .submitInvite()
+
+      TeamPage.shouldHaveInviteModalClosed()
+      cy.get('@inviteApi').then((interception) => {
         if (interception) {
           expect(interception.request.body).to.include.keys('name', 'email')
-          expect(interception.request.body.email).to.eq(this.member.new.email)
+          expect(interception.request.body.email).to.eq(member.email)
         }
       })
     })
@@ -211,8 +223,8 @@ describe('Team', () => {
     })
 
     it('edit save updates the row and triggers a write request if API-driven', () => {
-      cy.intercept('PUT', '/api/**').as('editPut')
-      cy.intercept('PATCH', '/api/**').as('editPatch')
+      cy.interceptPutUser()
+      cy.interceptPatchUser()
 
       TeamPage.startEdit(1)
         .editName(1, 'Alice QA Intercepted')
@@ -220,8 +232,8 @@ describe('Team', () => {
 
       TeamPage.nameCell(1).should('contain.text', 'Alice QA Intercepted')
 
-      cy.get('@editPut').then((put) => {
-        cy.get('@editPatch').then((patch) => {
+      cy.get('@putUser').then((put) => {
+        cy.get('@patchUser').then((patch) => {
           const interception = put || patch
           if (interception) {
             expect(interception.request.body).to.have.property('name')

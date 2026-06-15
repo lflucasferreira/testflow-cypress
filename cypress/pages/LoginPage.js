@@ -33,7 +33,7 @@ class LoginPage {
   }
 
   toggleUseApi() {
-    this.useApiCheckbox().click({ force: true })
+    this.useApiCheckbox().then(($el) => $el[0].click())
     return this
   }
 

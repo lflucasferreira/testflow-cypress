@@ -1,8 +1,8 @@
 import SettingsPage from '../../pages/SettingsPage'
 
-describe('Settings', () => {
+describe('Settings', { tags: '@regression' }, () => {
   beforeEach(() => {
-    cy.visitAuthenticated('/web/settings.html')
+    cy.visitWithSession('/web/settings.html')
     SettingsPage.pageRoot().should('exist')
   })
 
@@ -12,7 +12,7 @@ describe('Settings', () => {
       SettingsPage.emailInput().should('have.value', 'demo@automation.io')
     })
 
-    it('saves profile and shows success message', () => {
+    it('saves profile and shows success message', { tags: '@smoke @critical' }, () => {
       SettingsPage.fillName('Demo User Updated').saveProfile()
       SettingsPage.shouldShowSaveSuccess()
     })
@@ -29,6 +29,11 @@ describe('Settings', () => {
 
     it('avatar upload input accepts image files', () => {
       SettingsPage.fileUpload().should('have.attr', 'accept').and('include', '.png')
+    })
+
+    it('uploads a CSV fixture via selectFile', () => {
+      SettingsPage.fileUpload().selectFile('cypress/fixtures/sample.csv', { force: true })
+      SettingsPage.uploadResult().should('contain.text', 'sample.csv')
     })
   })
 
@@ -86,7 +91,7 @@ describe('Settings', () => {
     })
 
     it('password change request contains currentPassword and newPassword', () => {
-      cy.intercept('POST', '/api/**').as('passwordChange')
+      cy.interceptPasswordChange()
 
       SettingsPage.submitPasswordChange('Demo123!', 'NewPass123!')
       SettingsPage.passwordResult().should('contain.text', 'updated')
@@ -155,7 +160,7 @@ describe('Settings', () => {
     })
 
     it('rotate token triggers a request and response contains new token', () => {
-      cy.intercept('/api/**').as('rotateRequest')
+      cy.interceptRotateToken()
 
       SettingsPage.rotateToken()
       SettingsPage.apiKeyDisplay().invoke('text').should('not.be.empty')
@@ -201,6 +206,12 @@ describe('Settings', () => {
       })
       SettingsPage.deleteAccountBtn().click()
       cy.get('@confirmDialog').should('have.been.called')
+    })
+  })
+
+  context('Accessibility', () => {
+    it('settings page has no critical a11y violations', { tags: '@a11y' }, () => {
+      cy.checkA11yPage('[data-testid="settings-form"]', { preset: 'critical' })
     })
   })
 })

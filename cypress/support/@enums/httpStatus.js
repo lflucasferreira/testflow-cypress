@@ -1,0 +1,15 @@
+const HTTP_STATUS = {
+  OK: 200,
+  NO_CONTENT: 204,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  NOT_FOUND: 404,
+  UNPROCESSABLE: 422,
+  SERVER_ERROR: 500,
+}
+
+const EXPECTED_RESPONSES = {
+  SUCCESS: { isSuccess: true },
+}
+
+module.exports = { HTTP_STATUS, EXPECTED_RESPONSES }

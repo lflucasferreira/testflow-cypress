@@ -1,12 +1,12 @@
-describe('API — Users & Health', () => {
-  context('GET /api/users', () => {
+describe('API — Users & Health', { tags: '@api @regression' }, () => {
+  context('GET /api/users', { tags: '@api' }, () => {
     let res
 
     before(() => {
       cy.request('/api/users').then((r) => { res = r })
     })
 
-    it('returns status 200', () => {
+    it('returns status 200', { tags: '@smoke @api' }, () => {
       expect(res.status).to.eq(200)
     })
 
@@ -36,8 +36,8 @@ describe('API — Users & Health', () => {
     })
   })
 
-  context('GET /health', () => {
-    it('returns status 200', () => {
+  context('GET /health', { tags: '@api @smoke' }, () => {
+    it('returns status 200', { tags: '@smoke @api' }, () => {
       cy.request('/health').its('status').should('eq', 200)
     })
 
@@ -46,7 +46,7 @@ describe('API — Users & Health', () => {
     })
   })
 
-  context('Error simulation endpoints', () => {
+  context('Error simulation endpoints', { tags: '@api' }, () => {
     it('GET /api/errors/404 returns 404', () => {
       cy.request({ url: '/api/errors/404', failOnStatusCode: false })
         .its('status').should('eq', 404)
@@ -74,49 +74,22 @@ describe('API — Users & Health', () => {
     })
   })
 
-  context('Intercept — users list loaded on Team page', () => {
+  context('Fixture + intercept on Activity page', { tags: '@api' }, () => {
     beforeEach(() => {
-      cy.visitAuthenticated('/web/team.html')
+      cy.visitWithSession('/web/activity.html')
     })
 
-    it('Team page triggers GET /api/users on load', () => {
-      cy.intercept('GET', /\/api\/users/).as('loadUsers')
-      cy.reload()
-      cy.getByTestId('users-table').should('exist')
-      cy.get('@loadUsers').then((interception) => {
-        if (interception) {
-          expect(interception.response.statusCode).to.eq(200)
-        }
-      })
+    it('mockApiGet serves empty users fixture on fetch', () => {
+      cy.mockApiGet('users/empty-list', /\/api\/users/)
+      cy.getByTestId('fetch-users-btn').click()
+      cy.wait('@mock_users_empty-list')
+      cy.getByTestId('api-result').should('contain.text', 'Fetched 0 users')
     })
 
-    it('stubbed empty users list shows zero rows if page uses API', () => {
-      cy.intercept('GET', /\/api\/users/, {
-        statusCode: 200,
-        body: { users: [] },
-      }).as('emptyUsers')
-
-      cy.reload()
-      cy.getByTestId('users-table').should('exist')
-      cy.get('@emptyUsers').then((interception) => {
-        if (interception) {
-          cy.getByTestId('users-table').find('tbody tr').should('have.length', 0)
-        }
-      })
-    })
-
-    it('stubbed API error shows fallback state if page uses API', () => {
-      cy.intercept('GET', /\/api\/users/, {
-        statusCode: 500,
-        body: { message: 'Internal Server Error' },
-      }).as('failUsers')
-
-      cy.reload()
-      cy.getByTestId('users-table').should('exist')
-      cy.get('@failUsers').then((interception) => {
-        if (interception) {
-          cy.getByTestId('users-table').find('tbody tr').should('have.length', 0)
-        }
+    it('readFixture task loads countries lookup', () => {
+      cy.task('readFixture', 'lookups/countries.json').then((data) => {
+        expect(data.countries).to.be.an('array').and.have.length.greaterThan(0)
+        expect(data.countries[0]).to.include.keys('code', 'name')
       })
     })
   })

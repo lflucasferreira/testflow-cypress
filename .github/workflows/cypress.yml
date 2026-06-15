@@ -42,7 +42,45 @@ jobs:
         if: steps.cache-tests.outputs.cache-hit != 'true'
         run: npm ci
 
-  # ── Stage 2: run each suite in parallel ───────────────────────────────────
+  # ── Stage 2: smoke gate (grep @smoke) ─────────────────────────────────────
+  smoke:
+    name: Cypress — smoke (@smoke)
+    runs-on: ubuntu-latest
+    needs: setup
+    timeout-minutes: 20
+    services:
+      testflow:
+        image: qaschool/testflow:latest
+        ports:
+          - 5050:5050
+        options: >-
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 6
+          --health-start-period 90s
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: tests-${{ hashFiles('package-lock.json') }}
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-bin-${{ hashFiles('package-lock.json') }}
+      - run: npm run cy:run:smoke
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: screenshots-smoke
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+  # ── Stage 3: run each suite in parallel ───────────────────────────────────
   test:
     name: Cypress — ${{ matrix.suite }}
     runs-on: ubuntu-latest
@@ -61,7 +99,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [api, smoke, auth, dashboard, team, settings, components]
+        suite: [api, smoke, auth, dashboard, team, settings, components, wizard, advanced, activity, states]
     steps:
       - name: Checkout test suite
         uses: actions/checkout@v5
@@ -121,11 +159,27 @@ jobs:
           path: cypress/screenshots
           if-no-files-found: ignore
 
+  component:
+    name: Cypress Component Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: tests-${{ hashFiles('package-lock.json') }}
+      - run: npm run cy:run:component
+
   # ── Stage 3: merge JSONs and generate combined HTML report ───────────────
   report:
     name: Generate HTML report
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, smoke]
     if: always()
     timeout-minutes: 5
     steps:
