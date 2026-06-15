@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cypress — Introdução &amp; Instalação</title>
+    <meta name="description" content="Apresentação introdutória sobre Cypress: o que é, como instalar e primeiro teste E2E." />
+
+    <link rel="icon" href="assets/cypress-logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../../node_modules/reveal.js/dist/reveal.css" />
+    <link rel="stylesheet" href="../../node_modules/reveal.js/dist/theme/black.css" />
+    <link rel="stylesheet" href="../../node_modules/highlight.js/styles/github-dark.css" />
+    <link rel="stylesheet" href="css/theme-cypress.css" />
+    <script>
+      if (window.location.search.match(/print-pdf/gi)) {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.type = 'text/css'
+        link.href = 'css/print-pdf.css'
+        document.head.appendChild(link)
+      }
+    </script>
+  </head>
+  <body>
+    <div class="footer-bar" aria-hidden="true"></div>
+
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- Slide 1: Title -->
+        <section class="slide-title" data-auto-animate>
+          <div class="logo-wrap">
+            <img src="assets/cypress-logo.svg" alt="Cypress logo" width="72" height="72" />
+            <span class="wordmark">Cypress</span>
+          </div>
+          <h1>Testes E2E no browser</h1>
+          <p class="subtitle">E2E, API, Component Testing, comandos, POM e primeiro teste</p>
+          <span class="badge">Automação · JavaScript · Cypress</span>
+        </section>
+
+        <!-- Slide 2: O que é -->
+        <section>
+          <h2>O que é o Cypress?</h2>
+          <p class="fragment fade-up">
+            Framework de automação <strong>end-to-end</strong> que roda testes diretamente no browser —
+            sem WebDriver, sem trocar de contexto.
+          </p>
+          <ul class="fragment fade-up">
+            <li>Escrito em <strong>JavaScript</strong> / TypeScript</li>
+            <li>API fluente e legível (<code>cy.visit</code>, <code>cy.get</code>, <code>cy.click</code>)</li>
+            <li>Time-travel debugging, screenshots e vídeos automáticos</li>
+            <li>Suporte a E2E, Component Testing e API testing</li>
+          </ul>
+        </section>
+
+        <!-- Slide 3: Por que Cypress -->
+        <section>
+          <h2>Por que usar Cypress?</h2>
+          <div class="feature-grid">
+            <div class="feature-card fragment fade-up">
+              <div class="icon">⚡</div>
+              <h4>Setup rápido</h4>
+              <p>Instalação em minutos com npm. Sem drivers externos.</p>
+            </div>
+            <div class="feature-card fragment fade-up">
+              <div class="icon">🔍</div>
+              <h4>Debug visual</h4>
+              <p>Runner interativo mostra cada comando e o DOM em tempo real.</p>
+            </div>
+            <div class="feature-card fragment fade-up">
+              <div class="icon">🛡️</div>
+              <h4>Retries automáticos</h4>
+              <p>Reexecuta assertions até passar ou estourar timeout.</p>
+            </div>
+            <div class="feature-card fragment fade-up">
+              <div class="icon">📦</div>
+              <h4>Ecossistema</h4>
+              <p>Plugins para a11y, relatórios, intercept de API e CI.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 4: Pré-requisitos -->
+        <section>
+          <h2>Pré-requisitos</h2>
+          <div class="two-col">
+            <div>
+              <h3>Ambiente</h3>
+              <ul>
+                <li class="fragment fade-up"><strong>Node.js</strong> 18+ (LTS recomendado)</li>
+                <li class="fragment fade-up"><strong>npm</strong>, yarn ou pnpm</li>
+                <li class="fragment fade-up">Um app web rodando localmente ou em staging</li>
+                <li class="fragment fade-up">Editor: VS Code / Cursor (opcional: extensão Cypress)</li>
+              </ul>
+            </div>
+            <div class="terminal fragment fade-up">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+              </div>
+              <div class="terminal-body">
+                <div><span class="prompt">$</span> node --version</div>
+                <div>v20.x.x</div>
+                <br />
+                <div><span class="prompt">$</span> npm --version</div>
+                <div>10.x.x</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 5: Instalação passo 1 -->
+        <section>
+          <h2>Instalação — Passo a passo</h2>
+          <ol class="steps">
+            <li class="fragment fade-up">
+              <div>
+                <strong>Crie ou entre no projeto</strong><br />
+                <code>mkdir meu-projeto && cd meu-projeto && npm init -y</code>
+              </div>
+            </li>
+            <li class="fragment fade-up">
+              <div>
+                <strong>Instale o Cypress</strong><br />
+                <code>npm install cypress --save-dev</code>
+              </div>
+            </li>
+            <li class="fragment fade-up">
+              <div>
+                <strong>Abra o Cypress pela primeira vez</strong><br />
+                <code>npx cypress open</code> — gera a pasta <code>cypress/</code> automaticamente
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <!-- Slide 6: Estrutura -->
+        <section>
+          <h2>Estrutura do projeto</h2>
+          <div class="two-col">
+            <pre class="fragment fade-up"><code class="hljs">meu-projeto/
+├── cypress/
+│   ├── e2e/              # Specs por feature
+│   ├── commands/         # intercept, API, action sequences
+│   ├── fixtures/         # Dados estáticos (JSON)
+│   ├── support/
+│   │   ├── factories/    # Geração de dados de teste
+│   │   ├── commands.js   # Comandos globais
+│   │   └── e2e.js        # Setup + plugins
+│   ├── screenshots/
+│   └── videos/
+├── cypress.config.js
+└── package.json</code></pre>
+            <ul class="fragment fade-up">
+              <li><code>commands/</code> — intercepts, seed API e fluxos compostos</li>
+              <li><code>factories/</code> — dados dinâmicos com Faker</li>
+              <li><code>e2e/*.cy.js</code> — um arquivo = um fluxo ou feature</li>
+              <li><code>support/commands.js</code> — <code>getByHook</code> e helpers globais</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Slide 7: Config mínima -->
+        <section>
+          <h2>Configuração mínima</h2>
+          <pre class="fragment fade-up"><code class="language-javascript">// cypress.config.js
+const { defineConfig } = require('cypress')
+
+module.exports = defineConfig({
+  e2e: {
+    baseUrl: 'http://localhost:3000',
+    specPattern: 'cypress/e2e/**/*.cy.js',
+    supportFile: 'cypress/support/e2e.js',
+    viewportWidth: 1280,
+    viewportHeight: 800,
+  },
+})</code></pre>
+          <p class="fragment fade-up" style="font-size: 0.65em; color: var(--cypress-muted);">
+            Com <code>baseUrl</code> definida, use <code>cy.visit('/')</code> em vez da URL completa.
+          </p>
+        </section>
+
+        <!-- Slide 8: Primeiro teste -->
+        <section>
+          <h2>Seu primeiro teste</h2>
+          <pre class="fragment fade-up"><code class="language-javascript">// cypress/e2e/sign-in.cy.js
+describe('Sign In', () => {
+  it('should authenticate with valid credentials', () => {
+    // Given: user is on sign-in page
+    cy.visit('/sign-in')
+
+    // When: user submits valid credentials
+    cy.getByHook('email-input').type('user@example.com')
+    cy.getByHook('password-input').type('Secret123!', { log: false })
+    cy.getByHook('submit-btn').click()
+
+    // Then: dashboard is visible
+    cy.url().should('include', '/dashboard')
+    cy.getByHook('welcome-message').should('be.visible')
+  })
+})</code></pre>
+          <p class="fragment fade-up" style="font-size: 0.6em; color: var(--cypress-muted);">
+            Convenção fictícia: atributo <code>data-cy-hook</code> + comando <code>cy.getByHook()</code>
+          </p>
+        </section>
+
+        <!-- Comandos E2E (vertical stack) -->
+        <section>
+          <section>
+            <h2>Navegação &amp; DOM</h2>
+            <p style="font-size: 0.7em; color: var(--cypress-muted);">
+              Comandos comuns em specs E2E — exemplos fictícios de um app "Acme Portal"
+            </p>
+            <table class="compare-table compact fragment fade-up">
+              <thead>
+                <tr><th>Comando</th><th>Uso típico</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>cy.visit(path)</code></td><td>Abrir sign-in, dashboard, páginas internas</td></tr>
+                <tr><td><code>cy.get(selector)</code></td><td>CSS, roles ARIA, <code>body</code></td></tr>
+                <tr><td><code>cy.getByHook(id)</code></td><td>Custom — shorthand para <code>[data-cy-hook]</code></td></tr>
+                <tr><td><code>cy.url()</code></td><td>Validar redirect após auth</td></tr>
+                <tr><td><code>cy.title()</code></td><td>Smoke — título da página</td></tr>
+                <tr><td><code>cy.reload()</code></td><td>Recarregar após mock de API</td></tr>
+                <tr><td><code>cy.window()</code></td><td>Inspecionar storage pós-login</td></tr>
+                <tr><td><code>.find()</code></td><td>Linhas de tabela, células, colunas</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2>Interações na chain</h2>
+            <table class="compare-table compact fragment fade-up">
+              <thead>
+                <tr><th>Comando</th><th>Uso típico</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>.type(text)</code></td><td>Formulários, busca, filtros</td></tr>
+                <tr><td><code>.click()</code></td><td>Submit, tabs, modais, paginação</td></tr>
+                <tr><td><code>.clear()</code></td><td>Limpar campo antes de digitar</td></tr>
+                <tr><td><code>.select(value)</code></td><td>&lt;select&gt; nativo — timezone, role, env</td></tr>
+                <tr><td><code>{ force: true }</code></td><td>Elemento coberto por overlay</td></tr>
+                <tr><td><code>{ log: false }</code></td><td>Ocultar senha nos logs</td></tr>
+                <tr><td><code>{ timeout: 5000 }</code></td><td>Aguardar estado async</td></tr>
+                <tr><td><code>body.type('{esc}')</code></td><td>Fechar modal com Escape</td></tr>
+                <tr><td><code>cy.contains(text)</code></td><td>Encontrar botão/link por label visível</td></tr>
+                <tr><td><code>.eq(n)</code></td><td>Selecionar o n-ésimo elemento duplicado</td></tr>
+                <tr><td><code>.scrollIntoView()</code></td><td>Rolar até elemento fora do viewport</td></tr>
+                <tr><td><code>.parent() / .siblings()</code></td><td>Navegar no DOM relativo ao elemento</td></tr>
+                <tr><td><code>.check() / .uncheck()</code></td><td>Checkboxes e consent terms</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2>Assertions</h2>
+            <table class="compare-table compact fragment fade-up">
+              <thead>
+                <tr><th>Assertion</th><th>Exemplo</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>.should('be.visible')</code></td><td>Modais, cards, toast, tabs</td></tr>
+                <tr><td><code>.should('exist') / .not.exist</code></td><td>Page root, elemento removido</td></tr>
+                <tr><td><code>.should('contain.text', …)</code></td><td>Mensagens, contadores, erros</td></tr>
+                <tr><td><code>.should('have.length', n)</code></td><td>Linhas de tabela, lista de items</td></tr>
+                <tr><td><code>.should('have.attr', …)</code></td><td>aria-selected, aria-hidden, placeholder</td></tr>
+                <tr><td><code>.should('have.class', …)</code></td><td>Nav item ativo</td></tr>
+                <tr><td><code>.should('match', /regex/)</code></td><td>Formato de data, percentual</td></tr>
+                <tr><td><code>.and(…)</code></td><td>Encadear assertions</td></tr>
+                <tr><td><code>.its('status')</code></td><td>Status code em <code>cy.request</code></td></tr>
+                <tr><td><code>.invoke('text')</code></td><td>Extrair valor numérico de UI</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2>cy.intercept — spy &amp; mock</h2>
+            <pre class="fragment fade-up"><code class="language-javascript">// Spy — observa chamada real
+cy.intercept('POST', '/api/v1/auth/signin').as('signInApi')
+SignInPage.submitCredentials(email, password)
+cy.wait('@signInApi').its('response.statusCode').should('eq', 200)
+
+// Mock — simula erro 401
+cy.intercept('POST', '/api/v1/auth/signin', {
+  statusCode: 401,
+  body: { message: 'Invalid credentials' },
+}).as('signInFail')
+cy.wait('@signInFail')
+SignInPage.shouldStayOnSignInPage()
+
+// Inspect API payload
+cy.intercept('POST', '/api/v1/users/invite').as('inviteApi')
+UsersPage.sendInvite(name, email)
+cy.get('@inviteApi').its('request.body.email').should('eq', email)</code></pre>
+            <div class="command-tags fragment fade-up">
+              <span class="cmd-tag">.as('alias')</span>
+              <span class="cmd-tag">cy.wait('@alias')</span>
+              <span class="cmd-tag">cy.get('@alias')</span>
+              <span class="cmd-tag">GET / PUT / PATCH</span>
+              <span class="cmd-tag">regex URL</span>
+            </div>
+          </section>
+
+          <section>
+            <h2>cy.request &amp; API testing</h2>
+            <pre class="fragment fade-up"><code class="language-javascript">// Auth direto — mais rápido que UI
+cy.request({
+  method: 'POST',
+  url: '/api/v1/auth/signin',
+  body: { email, password },
+})
+
+// Chamada API autenticada (comando customizado)
+cy.apiWithAuth({ method: 'GET', url: '/api/v1/users' })
+
+// Health check
+cy.request('/health').its('status').should('eq', 200)
+cy.request({ url: '/api/v1/not-found', failOnStatusCode: false })
+  .its('status').should('eq', 404)
+
+// Validar shape da resposta
+cy.assertResponseShape(user, { id: 'number', name: 'string' })</code></pre>
+            <div class="command-tags fragment fade-up">
+              <span class="cmd-tag">cy.request</span>
+              <span class="cmd-tag">cy.apiWithAuth</span>
+              <span class="cmd-tag">cy.assertResponseShape</span>
+              <span class="cmd-tag">failOnStatusCode: false</span>
+              <span class="cmd-tag">onBeforeLoad</span>
+            </div>
+          </section>
+
+          <section>
+            <h2>Comandos customizados (E2E)</h2>
+            <p style="font-size: 0.65em; color: var(--cypress-muted);">
+              Definidos em <code>cypress/support/commands.js</code> — convenção <code>data-cy-hook</code>
+            </p>
+            <pre class="fragment fade-up" style="font-size: 0.48em;"><code class="language-javascript">// cypress/support/commands.js
+Cypress.Commands.add('getByHook', (hook) =>
+  cy.get(`[data-cy-hook="${hook}"]`)
+)
+Cypress.Commands.add('assertHookMissing', (hook) =>
+  cy.get(`[data-cy-hook="${hook}"]`).should('not.exist')
+)</code></pre>
+            <table class="compare-table compact fragment fade-up">
+              <thead>
+                <tr><th>Comando</th><th>Quando usar</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>cy.getByHook(id)</code></td><td>Selector padrão da suíte</td></tr>
+                <tr><td><code>cy.assertHookMissing(id)</code></td><td>Elemento ausente no DOM</td></tr>
+                <tr><td><code>cy.signInViaUI()</code></td><td>Auth via formulário — testa fluxo</td></tr>
+                <tr><td><code>cy.signInViaAPI()</code></td><td>Auth programática — beforeEach rápido</td></tr>
+                <tr><td><code>cy.visitAsUser(path)</code></td><td>Navegar já autenticado</td></tr>
+                <tr><td><code>cy.apiWithAuth(opts)</code></td><td>Chamada HTTP com Bearer token</td></tr>
+                <tr><td><code>cy.assertResponseShape(obj, schema)</code></td><td>Validar tipos da resposta</td></tr>
+                <tr><td><code>cy.getTableRows(hook)</code></td><td>Linhas visíveis de tabela</td></tr>
+                <tr><td><code>cy.getTableCell(rowId, field)</code></td><td>Célula por id de linha</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2>Fixture, stub &amp; eventos</h2>
+            <div class="two-col">
+              <pre class="fragment fade-up"><code class="language-javascript">// Fixtures — dados determinísticos
+cy.fixture('users/valid-user').as('user')
+cy.fixture('users/invite-payload').as('invite')
+
+// cy.wrap — iterar elementos
+cy.getTableRows().each(($row) => {
+  cy.wrap($row)
+    .find('[data-cy-hook="role-badge"]')
+    .should('exist')
+})
+
+// cy.stub — controlar dialogs nativos
+cy.window().then((win) => {
+  cy.stub(win, 'confirm').returns(false).as('confirmStub')
+})
+cy.get('@confirmStub').should('have.been.called')</code></pre>
+              <div class="fragment fade-up">
+                <h3 style="margin-top: 0;">Eventos do browser</h3>
+                <ul style="font-size: 0.75em;">
+                  <li><code>cy.on('window:alert')</code> — captura alert</li>
+                  <li><code>cy.on('window:confirm')</code> — confirm true/false</li>
+                  <li><code>Cypress.on('uncaught:exception')</code> — ignora erros do app</li>
+                </ul>
+                <h3>Plugins úteis</h3>
+                <ul style="font-size: 0.75em;">
+                  <li><code>cypress-axe</code> — acessibilidade</li>
+                  <li><code>cypress-mochawesome-reporter</code> — relatórios CI</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- POM section (vertical stack) -->
+        <section>
+          <section>
+            <h2>Page Object Model (POM)</h2>
+            <p class="fragment fade-up" style="font-size: 0.75em;">
+              Padrão que <strong>encapsula</strong> seletores, ações e assertions de cada página
+              em uma classe — o spec fica legível e mudanças de UI ficam isoladas.
+            </p>
+            <div class="pom-diagram fragment fade-up">
+              <div class="pom-box">
+                <h4>Spec (.cy.js)</h4>
+                <ul>
+                  <li>Descreve o <em>cenário</em></li>
+                  <li>Given / When / Then</li>
+                  <li>Sem seletores espalhados</li>
+                </ul>
+              </div>
+              <div class="pom-arrow">→</div>
+              <div class="pom-box">
+                <h4>Page Object</h4>
+                <ul>
+                  <li>Selectors (<code>getByHook</code>)</li>
+                  <li>Actions (<code>signInWith</code>)</li>
+                  <li>Assertions (<code>shouldBeLoaded</code>)</li>
+                </ul>
+              </div>
+            </div>
+            <p class="fragment fade-up badge" style="margin-top: 1.2em;">
+              cypress/pages/ — SignInPage · DashboardPage · UsersPage · SettingsPage
+            </p>
+          </section>
+
+          <section>
+            <h2>Anatomia de um Page Object</h2>
+            <pre class="fragment fade-up"><code class="language-javascript">// cypress/pages/SignInPage.js
+class SignInPage {
+  emailInput()  { return cy.getByHook('email-input') }
+  submitBtn()   { return cy.getByHook('submit-btn') }
+
+  visit() {
+    cy.visit('/sign-in')
+    return this
+  }
+
+  signInWith(email, password) {
+    this.emailInput().clear().type(email)
+    this.passwordInput().clear().type(password, { log: false })
+    this.submitBtn().click()
+    return this
+  }
+
+  shouldReachDashboard() {
+    cy.getByHook('page-dashboard').should('exist')
+    cy.url().should('include', '/dashboard')
+    return this
+  }
+}
+
+export default new SignInPage()</code></pre>
+          </section>
+
+          <section>
+            <h2>POM no spec</h2>
+            <pre class="fragment fade-up"><code class="language-javascript">// cypress/e2e/auth/sign-in.cy.js
+import SignInPage from '../../pages/SignInPage'
+
+describe('Authentication', () => {
+  beforeEach(() => SignInPage.visit())
+
+  it('signs in via UI and reaches dashboard', () => {
+    SignInPage
+      .signInWith('user@example.com', 'Secret123!')
+      .shouldReachDashboard()
+  })
+
+  it('signs in with API mode + intercept', () => {
+    cy.intercept('POST', '/api/v1/auth/signin').as('signInApi')
+
+    SignInPage
+      .enableApiMode()
+      .signInWith('user@example.com', 'Secret123!')
+
+    cy.wait('@signInApi').its('response.statusCode').should('eq', 200)
+    SignInPage.shouldReachDashboard()
+  })
+})</code></pre>
+          </section>
+
+          <section>
+            <h2>POM + beforeEach pattern</h2>
+            <div class="two-col">
+              <pre class="fragment fade-up"><code class="language-javascript">// dashboard.cy.js
+import DashboardPage from '../../pages/DashboardPage'
+
+beforeEach(() => {
+  cy.signInViaAPI()
+  DashboardPage.shouldBeLoaded()
+})
+
+it('shows metric cards', () => {
+  DashboardPage.shouldShowAllMetrics()
+  DashboardPage.metricValue('orders')
+    .invoke('text').then(parseInt)
+    .should('be.greaterThan', 0)
+})</code></pre>
+              <pre class="fragment fade-up"><code class="language-javascript">// users.cy.js
+import UsersPage from '../../pages/UsersPage'
+
+beforeEach(() => {
+  cy.visitAsUser('/users')
+  UsersPage.pageRoot().should('exist')
+})
+
+it('filters rows by name', () => {
+  UsersPage.search('Jane')
+  UsersPage.shouldShowRowCount(1)
+  UsersPage.nameCell(1)
+    .should('contain.text', 'Jane Doe')
+})</code></pre>
+            </div>
+            <div class="page-map fragment fade-up">
+              <div class="page-map-item">SignInPage.js <span>auth flow</span></div>
+              <div class="page-map-item">DashboardPage.js <span>metrics, actions</span></div>
+              <div class="page-map-item">UsersPage.js <span>table, invite, edit</span></div>
+              <div class="page-map-item">SettingsPage.js <span>forms, preferences</span></div>
+            </div>
+          </section>
+        </section>
+
+        <!-- E2E Avançado (vertical stack) -->
+        <section>
+          <section>
+            <h2>E2E Avançado — visão geral</h2>
+            <p style="font-size: 0.72em; color: var(--cypress-muted);">
+              Padrões de suítes E2E enterprise: sessão cacheada, seed de API,
+              intercept com mutação de payload, wizard multi-step e relatório BDD.
+            </p>
+            <div class="feature-grid fragment fade-up" style="font-size: 0.58em;">
+              <div class="feature-card">
+                <h4>Setup</h4>
+                <p><code>cy.session</code> · seed API · multi-env</p>
+              </div>
+              <div class="feature-card">
+                <h4>Dados</h4>
+                <p>Factories · Faker · interfaces TS</p>
+              </div>
+              <div class="feature-card">
+                <h4>Rede</h4>
+                <p>Intercept + <code>req.reply</code> · helpers nomeados</p>
+              </div>
+              <div class="feature-card">
+                <h4>DX</h4>
+                <p><code>cy.section/step</code> · tags · enums de timeout</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2>cy.session — login cacheado</h2>
+            <pre class="fragment fade-up"><code class="language-javascript">// before() — login uma vez, reutiliza em todos os specs
+before(() => {
+  cy.seedAuthToken(user, pass)
+  cy.seedComplianceStatus('NOT_STARTED')
+
+  cy.session([user, pass], () => {
+    cy.signInViaUI(user, pass)
+    cy.url().should('not.include', '/sign-in')
+    cy.skipOnboardingTour()
+    cy.getByHook('header-profile-btn').should('be.visible')
+  }, {
+    validate() {
+      cy.getCookies().then((cookies) => {
+        if (!cookies.length) throw new Error('Session expired')
+        cy.validateSession(Cypress.env('baseUrl'))
+      })
+    },
+  })
+})
+
+beforeEach(() => {
+  cy.visit(Cypress.env('baseUrl'))
+  ProfilePage.open()
+})</code></pre>
+            <div class="command-tags fragment fade-up">
+              <span class="cmd-tag">cacheAcrossSpecs</span>
+              <span class="cmd-tag">validate()</span>
+              <span class="cmd-tag">before vs beforeEach</span>
+            </div>
+          </section>
+
+          <section>
+            <h2>Seed de estado via API</h2>
+            <pre class="fragment fade-up"><code class="language-javascript">// cypress/commands/api-setup.js — preparar estado antes da UI
+Cypress.Commands.add('seedAuthToken', (user, pass) => {
+  cy.apiSignIn(user, pass).then(({ body }) => {
+    Cypress.env('accessToken', body.token)
+  })
+})
+
+Cypress.Commands.add('seedComplianceStatus', (status) => {
+  cy.apiWithAuth({
+    method: 'PUT',
+    url: '/api/v1/compliance/sections',
+    body: { personal: status, employment: status },
+  })
+})
+
+Cypress.Commands.add('cancelPendingTickets', (userId) => {
+  cy.apiWithAuth({
+    method: 'DELETE',
+    url: `/api/v1/users/${userId}/pending-changes`,
+  })
+})
+
+// beforeEach — estado limpo por teste
+beforeEach(() => {
+  cy.cancelPendingTickets(testUser.id)
+  cy.interceptGetProfile().as('getProfile')
+  ProfilePage.open()
+  cy.wait('@getProfile')
+})</code></pre>
+          </section>
+
+          <section>
+            <h2>Intercept — mutar response</h2>
+            <pre class="fragment fade-up"><code class="language-javascript">// Forçar telefone não verificado sem alterar backend
+cy.interceptGetProfileAndPatch((body) => {
+  body.profile.phoneVerified = false
+  body.profile.phone = '+1 555 0100'
+}).as('getProfile')
+
+// Resetar pending changes no GET
+cy.intercept('GET', '/api/v1/profile/basic', (req) => {
+  req.reply(({ body }) => {
+    body.pendingProfile.displayName = null
+    body.pendingProfile.dateOfBirth = null
+  })
+}).as('resetPending')
+
+// Mock de lookup countries
+cy.intercept('GET', '/api/v1/lookups/countries', {
+  fixture: 'lookups/countries',
+}).as('countries')
+
+cy.wait('@getProfile')
+cy.getByHook('phone-verify-btn').should('be.visible')</code></pre>
+            <p class="fragment fade-up" style="font-size: 0.58em; color: var(--cypress-muted);">
+              Helpers nomeados: <code>interceptGetProfile()</code> ·
+              <code>interceptPatchProfile()</code> · <code>interceptGetCompliance()</code>
+            </p>
+          </section>
+
+          <section>
+            <h2>Factories &amp; Faker</h2>
+            <pre class="fragment fade-up"><code class="language-typescript">// cypress/support/factories/ContactFactory.ts
+import { faker } from '@faker-js/faker'
+
+export class ContactFactory {
+  static createEmail({ verified = true } = {}) {
+    return {
+      email: faker.internet.email(),
+      isVerified: verified,
+    }
+  }
+
+  static createPhone({ country = 'CA' } = {}) {
+    return {
+      number: faker.phone.number(),
+      country,
+      isVerified: false,
+    }
+  }
+}
+
+// No spec:
+const email = ContactFactory.createEmail({ verified: false })
+cy.interceptGetProfileAndPatch((body) => {
+  body.profile.email = email.email
+  body.profile.isEmailVerified = email.isVerified
+})</code></pre>
+            <div class="command-tags fragment fade-up">
+              <span class="cmd-tag">@faker-js/faker</span>
+              <span class="cmd-tag">interfaces TS</span>
+              <span class="cmd-tag">enums de status</span>
+            </div>
+          </section>
+
+          <section>
+            <h2>Comandos compostos (actions)</h2>
+            <p style="font-size: 0.65em; color: var(--cypress-muted);">
+              Sequências de UI encapsuladas — o spec descreve o cenário, não cada clique.
+            </p>
+            <pre class="fragment fade-up"><code class="language-javascript">// cypress/commands/actions.js
+Cypress.Commands.add('fillDateOfBirth', (day, month, year) => {
+  cy.openDropdown('dob-month', month)
+  cy.getByHook('dob-day').clear().type(day)
+  cy.getByHook('dob-year').clear().type(String(year))
+})
+
+Cypress.Commands.add('completePhoneVerification', (phone, code) => {
+  cy.getByHook('edit-phone-btn').click()
+  cy.getByHook('phone-input').find('input[type="tel"]').type(phone)
+  cy.interceptPhoneValidate().as('validate')
+  cy.clickHook('dialog-confirm')
+  cy.getByHook('verify-via-sms').click()
+  cy.clickHook('dialog-confirm')
+  cy.wait('@validate').then(({ body }) => {
+    cy.get('#otp-code').type(code ?? body.code)
+    cy.clickHook('dialog-confirm')
+  })
+})
+
+// No spec:
+cy.section('PHONE VERIFICATION')
+cy.step('Update and verify phone number')
+cy.completePhoneVerification('5551234567')
+cy.get('span:contains("Verified")').should('be.visible')</code></pre>
+          </section>
+
+          <section>
+            <h2>Wizard multi-step</h2>
+            <pre class="fragment fade-up"><code class="language-javascript">describe('Annual compliance review', () => {
+  it('completes all wizard sections', () => {
+    cy.contains('button', 'Start review').click()
+
+    // Section 1 — Personal
+    cy.section('PERSONAL INFO')
+    cy.editProfileField('display-name', 'Alex', 'M', 'Smith')
+    cy.getByHook('wizard-next').click()
+    cy.getByHook('step-personal').should('have.class', 'step-completed')
+
+    // Section 2 — Employment
+    cy.section('EMPLOYMENT')
+    cy.fillEmploymentDetails({ status: 'Employed', title: 'Analyst' })
+    cy.getByHook('wizard-next').click()
+    cy.getByHook('step-employment').should('have.class', 'step-completed')
+
+    // Final confirmation
+    cy.section('CONFIRMATION')
+    cy.getByHook('terms-checkbox').eq(0).check()
+    cy.getByHook('terms-checkbox').eq(1).check()
+    cy.getByHook('wizard-next').click()
+    cy.contains('button', 'Done').click()
+  })
+})</code></pre>
+          </section>
+
+          <section>
+            <h2>cy.section &amp; cy.step</h2>
+            <p style="font-size: 0.65em; color: var(--cypress-muted);">
+              Plugin <code>cypress-plugin-steps</code> — steps visíveis no runner e no relatório Mochawesome.
+            </p>
+            <pre class="fragment fade-up"><code class="language-javascript">it('updates email and creates back-office ticket', () => {
+  cy.section('Setup intercepts')
+  cy.interceptPatchProfile().as('patchProfile')
+  cy.interceptGetProfile().as('getProfile')
+
+  cy.section('Open edit modal')
+  cy.step('Click edit button')
+  cy.get('button[data-cy-hook="edit-email-btn"]').click()
+
+  cy.section('Submit change')
+  cy.step('Type new email and confirm')
+  cy.getByHook('email-input').type('new@example.com')
+  cy.clickHook('dialog-confirm')
+
+  cy.section('Assert API payload')
+  cy.step('Validate PATCH body')
+  cy.wait('@patchProfile')
+    .its('request.body.email')
+    .should('eq', 'new@example.com')
+})</code></pre>
+          </section>
+
+          <section>
+            <h2>Tags — filtrar specs</h2>
+            <pre class="fragment fade-up"><code class="language-typescript">// Plugin @bahmutov/cy-grep
+describe('Profile — Email', { tags: '@regression' }, () => {
+  it('creates ticket on name change', { tags: '@smoke @critical' }, () => {
+    // ...
+  })
+
+  it.skip('handles edge case', { tags: '@wip' }, () => {
+    // ...
+  })
+})
+
+// Executar só smoke:
+// npx cypress run --env grepTags=@smoke
+// npx cypress run --env grepTags=@smoke+@critical
+// grepFilterSpecs: true  → carrega só specs com a tag</code></pre>
+          </section>
+
+          <section>
+            <h2>Shadow DOM &amp; config avançada</h2>
+            <div class="two-col">
+              <pre class="fragment fade-up"><code class="language-javascript">// Page Object com Shadow DOM
+class ProfilePage {
+  shadowFind(hook) {
+    return cy.get('profile-app-root')
+      .shadow()
+      .find(`[data-cy-hook="${hook}"]`)
+  }
+
+  openEditModal(field) {
+    this.shadowFind(`edit-${field}-btn`).click({ force: true })
+  }
+}</code></pre>
+              <pre class="fragment fade-up"><code class="language-javascript">// cypress.config.js (trechos)
+module.exports = defineConfig({
+  includeShadowDom: true,
+  chromeWebSecurity: false,
+  testIsolation: false,       // state shared in suite
+  pageLoadTimeout: 120000,
+  defaultCommandTimeout: 60000,
+  experimentalMemoryManagement: true,
+  numTestsKeptInMemory: 1,
+  blockHosts: ['*.analytics.com', '*.ads.net'],
+  e2e: {
+    setupNodeEvents(on, config) {
+      require('@bahmutov/cy-grep/src/plugin')(config)
+      on('task', { seedDb, resetDb })
+      return config
+    },
+  },
+})</code></pre>
+            </div>
+          </section>
+
+          <section>
+            <h2>cy.task &amp; multi-ambiente</h2>
+            <pre class="fragment fade-up"><code class="language-javascript">// Node task — seed direto no banco (CI/staging)
+cy.task('resetUserProfile', { userId: 'abc-123' })
+cy.task('setComplianceFlag', { userId: 'abc-123', flag: 'REVIEW_DUE' })
+
+// Ambientes via config
+Cypress.Commands.add('setEnvironment', (env) => {
+  Cypress.env('ENV', env)  // 'staging' | 'production'
+})
+
+Cypress.Commands.add('visitPage', (path = '/') => {
+  cy.getBaseUrl().then((base) => cy.visit(`${base}${path}`))
+})
+
+// CLI: npx cypress run --env ENV=staging,version=staging</code></pre>
+            <table class="compare-table compact fragment fade-up" style="margin-top: 0.8em;">
+              <thead><tr><th>Pasta / artefato</th><th>Responsabilidade</th></tr></thead>
+              <tbody>
+                <tr><td><code>commands/interceptions.js</code></td><td>Helpers de <code>cy.intercept</code></td></tr>
+                <tr><td><code>commands/api-setup.js</code></td><td>Seed e cleanup via <code>cy.request</code></td></tr>
+                <tr><td><code>commands/actions.js</code></td><td>Fluxos compostos de UI</td></tr>
+                <tr><td><code>support/factories/</code></td><td>Dados dinâmicos</td></tr>
+                <tr><td><code>support/@enums/</code></td><td>Status, timeouts, viewports</td></tr>
+                <tr><td><code>support/loadConfig.js</code></td><td>Config + secrets por ambiente</td></tr>
+              </tbody>
+            </table>
+          </section>
+        </section>
+
+        <!-- API Testing section (vertical stack) -->
+        <section>
+          <section>
+            <h2>API Testing puro <span class="ct-badge">cy.request</span></h2>
+            <p class="fragment fade-up" style="font-size: 0.72em;">
+              Cypress também testa <strong>APIs REST</strong> sem browser —
+              ideal para rule engines, microserviços e contratos de dados.
+            </p>
+            <div class="two-col fragment fade-up" style="font-size: 0.62em;">
+              <div class="feature-card">
+                <h4>E2E (UI)</h4>
+                <p><code>cy.visit</code> + interações DOM</p>
+              </div>
+              <div class="feature-card">
+                <h4>API</h4>
+                <p><code>cy.request</code> — sem UI, foco em contrato</p>
+              </div>
+            </div>
+            <ul class="fragment fade-up" style="font-size: 0.65em; margin-top: 1em;">
+              <li>Specs por domínio: <code>e2e/personal/</code>, <code>e2e/tax/</code>, <code>e2e/financial/</code></li>
+              <li>Commands por serviço: <code>personalCommands</code>, <code>taxCommands</code></li>
+              <li>Utilities: builders, patterns, retry, JSON Patch utils</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Arquitetura dual — write + read</h2>
+            <div class="pom-diagram fragment fade-up" style="font-size: 0.58em;">
+              <div class="pom-box">
+                <h4>Rules API (write)</h4>
+                <ul>
+                  <li><code>PATCH /users/{id}</code></li>
+                  <li>JSON Patch body</li>
+                  <li>Retorna <code>{ isSuccess: true }</code></li>
+                </ul>
+              </div>
+              <div class="pom-arrow">→</div>
+              <div class="pom-box">
+                <h4>Profile API (read)</h4>
+                <ul>
+                  <li><code>GET /users/{id}/personal</code></li>
+                  <li>Valida persistência</li>
+                  <li>Retry com backoff</li>
+                </ul>
+              </div>
+            </div>
+            <pre class="fragment fade-up" style="font-size: 0.48em;"><code class="language-javascript">// Fluxo padrão
+cy.step('Patch display name via Rules API')
+cy.patchDisplayNameViaRules(userId, patches).then((res) => {
+  expect(res.status).to.eq(200)
+  expect(res.body).to.deep.eq({ isSuccess: true })
+})
+
+cy.step('Validate via Profile API')
+retryProfileValidation(userId, 'name', 'profile', expectedValues)</code></pre>
+          </section>
+
+          <section>
+            <h2>JSON Patch (RFC 6902)</h2>
+            <pre class="fragment fade-up"><code class="language-typescript">// Content-Type: application/json-patch+json
+const patches = new JsonPatchBuilder()
+  .replace('/personal/firstName', 'Alex')
+  .replace('/personal/middleName', null)
+  .replace('/personal/lastName', 'Smith')
+  .build()
+
+// Resultado:
+// [
+//   { op: 'replace', path: '/personal/firstName', value: 'Alex' },
+//   { op: 'replace', path: '/personal/middleName', value: null },
+//   { op: 'replace', path: '/personal/lastName', value: 'Smith' },
+// ]
+
+// Helpers utilitários
+extractPatchValues(patches)       // { firstName: 'Alex', ... }
+modifyPatchField(patches, path, v) // altera um campo para teste negativo
+removePatchField(patches, path)    // remove operação do array</code></pre>
+            <div class="command-tags fragment fade-up">
+              <span class="cmd-tag">replace</span>
+              <span class="cmd-tag">add</span>
+              <span class="cmd-tag">remove</span>
+              <span class="cmd-tag">JsonPatchBuilder</span>
+            </div>
+          </section>
+
+          <section>
+            <h2>Autenticação OAuth</h2>
+            <pre class="fragment fade-up"><code class="language-javascript">// before() — token de serviço (client credentials)
+before(() => cy.setServiceToken())
+
+// Token de negócio — escopo de usuário específico
+cy.setBusinessToken(userId)
+
+// Headers em cada chamada
+const headers = {
+  Authorization: `Bearer ${token}`,
+  'Content-Type': 'application/json-patch+json',
+  'Correlation-Id': generateUuid(),   // rastreio por teste
+}
+
+// Secrets via CI/CD ou Secret Manager — nunca hardcode
+cy.getServiceCredentials().then(({ client_id, client_secret }) => {
+  cy.apiSignIn({ client_id, client_secret, grant_type: 'client_credentials' })
+})</code></pre>
+            <p class="fragment fade-up" style="font-size: 0.58em; color: var(--cypress-muted);">
+              <code>log: false</code> em requests com credenciais — oculta secrets nos logs do Cypress.
+            </p>
+          </section>
+
+          <section>
+            <h2>patch vs tryPatch</h2>
+            <div class="two-col">
+              <pre class="fragment fade-up"><code class="language-javascript">// patch — espera sucesso (200)
+cy.patchDisplayNameViaRules(userId, patches)
+  .then((res) => {
+    expect(res.status).to.eq(200)
+  })
+
+// tryPatch — aceita falha (validação)
+// failOnStatusCode: false
+cy.tryPatchDisplayNameViaRules(patches)
+  .then((res) => {
+    expect(res.status).to.be.oneOf([400, 422])
+  })</code></pre>
+              <div class="fragment fade-up" style="font-size: 0.68em;">
+                <h3 style="margin-top:0;">Quando usar</h3>
+                <ul>
+                  <li><strong>patch</strong> — happy path, fluxo completo</li>
+                  <li><strong>tryPatch</strong> — testes negativos (campo nulo, formato inválido, tamanho máximo)</li>
+                </ul>
+                <h3>Headers dinâmicos</h3>
+                <p>Array body → <code>application/json-patch+json</code><br>
+                Object body → <code>application/json</code></p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2>Retry com backoff exponencial</h2>
+            <p style="font-size: 0.65em; color: var(--cypress-muted);">
+              Após PATCH, a leitura pode demorar — retry até o Profile API refletir os dados.
+            </p>
+            <pre class="fragment fade-up"><code class="language-typescript">// retryUtils.ts
+const DEFAULT_CONFIG = {
+  maxRetries: 5,
+  baseDelay: 1000,
+  maxDelay: 10000,
+  exponentialBackoff: true,
+}
+
+export function retryProfileValidation(userId, component, node, expected) {
+  const attempt = (retriesLeft) => {
+    cy.getProfilePersonal(userId, component, node).then((res) => {
+      try {
+        expect(res.status).to.eq(200)
+        expect(res.body[node].firstName).to.eq(expected.firstName)
+      } catch (err) {
+        if (retriesLeft <= 1) throw err
+        const delay = 1000 * Math.pow(2, 5 - retriesLeft)
+        cy.wait(Math.min(delay, 10000))
+        attempt(retriesLeft - 1)
+      }
+    })
+  }
+  attempt(5)
+}</code></pre>
+          </section>
+
+          <section>
+            <h2>Test Suite Builder</h2>
+            <pre class="fragment fade-up"><code class="language-typescript">// Encapsula happy path + validation por domínio
+class DisplayNameTestBuilder extends PersonalDataTestSuiteBuilder {
+  constructor() {
+    super('Display Name', 'name',
+      'patchDisplayNameViaRules',
+      'tryPatchDisplayNameViaRules',
+      'displayNameBody')
+  }
+
+  buildValidationTests() {
+    context('Invalid Characters', () => {
+      TestPatterns.generateInvalidCharacterTests([...], attrs, 'tryPatch...')
+    })
+    context('Mandatory Fields', () => {
+      TestPatterns.generateMandatoryFieldTests(['firstName', 'lastName'], ...)
+    })
+    context('Max Length', () => {
+      TestPatterns.generateMaxLengthTests(attrs, ..., 255)
+    })
+  }
+}
+
+// Uso no spec:
+const builder = new DisplayNameTestBuilder()
+builder.buildCompleteSuite(
+  () => builder.buildHappyPathTests(),
+  () => builder.buildValidationTests(),
+  () => TestDataFactory.createDisplayNamePatch()
+)</code></pre>
+          </section>
+
+          <section>
+            <h2>Test Patterns — gerar cenários</h2>
+            <pre class="fragment fade-up"><code class="language-javascript">// Happy path parametrizado por estado de identidade
+[false, true].forEach((isVerified) => {
+  context(`Happy Path | verified === ${isVerified}`, () => {
+    beforeEach(() => {
+      setUserByVerificationStatus(isVerified)
+      cy.wrap(TestDataFactory.createPatch()).as('patchBody')
+    })
+
+    it('[TC-0001] patches display name successfully', () => {
+      cy.get('@uuid').then((userId) => {
+        cy.get('@patchBody').then((patches) => {
+          TestPatterns.executeSuccessfulPatchFlow(userId, patches, ...)
+        })
+      })
+    })
+  })
+})
+
+// Idempotency — PATCH duplicado
+it('[TC-0010] accepts identical patch twice', () => {
+  cy.patchViaRules(userId, patches).its('status').should('eq', 200)
+  cy.patchViaRules(userId, patches).its('status').should('eq', 200)
+})</code></pre>
+          </section>
+
+          <section>
+            <h2>Generators &amp; Test Data Factory</h2>
+            <pre class="fragment fade-up"><code class="language-typescript">// support/@generators/ — dados válidos por país/regra
+generateUuid()
+generateTaxId('CA')          // formato doméstico
+generateTaxId('US')          // formato estrangeiro
+generateDateOfBirth({ age: 25 })
+
+// support/utilities/testDataFactory.ts
+class DisplayNameTestDataFactory {
+  static createCompletePatch() {
+    return createDisplayNamePatch(
+      faker.person.firstName(),
+      faker.person.middleName(),
+      faker.person.lastName(),
+    )
+  }
+}
+
+// Fixtures por país para endereço
+cy.fixture('addresses/domestic').then((addr) => {
+  const patch = convertAddressToPatch(addr)
+  cy.patchAddressViaRules(userId, patch)
+})</code></pre>
+          </section>
+
+          <section>
+            <h2>Spec completo — API contract test</h2>
+            <pre class="fragment fade-up"><code class="language-typescript">describe('Display Name', () => {
+  before(() => cy.setServiceToken())
+
+  context('Validation', () => {
+    beforeEach(() => {
+      setUserByVerificationStatus(false)
+      cy.wrap(TestDataFactory.createPatch()).as('patchBody')
+    })
+
+    it('[TC-0003] rejects numbers in firstName', () => {
+      cy.get('@patchBody').then((body) => {
+        const invalid = modifyPatchField(body, '/personal/firstName', '123')
+        cy.tryPatchDisplayNameViaRules(invalid)
+          .its('status').should('be.oneOf', [400, 422])
+      })
+    })
+
+    it('[TC-0009] rejects null firstName', () => {
+      cy.get('@patchBody').then((body) => {
+        const invalid = modifyPatchField(body, '/personal/firstName', null)
+        cy.tryPatchDisplayNameViaRules(invalid)
+          .its('status').should('be.oneOf', [400, 422])
+      })
+    })
+  })
+})</code></pre>
+          </section>
+
+          <section>
+            <h2>Infra &amp; relatórios API</h2>
+            <table class="compare-table compact fragment fade-up">
+              <thead><tr><th>Recurso</th><th>Uso</th></tr></thead>
+              <tbody>
+                <tr><td><code>loadConfigWithSecrets()</code></td><td>Config + secrets por ambiente (CI/CD)</td></tr>
+                <tr><td><code>cy.task('logJson', body)</code></td><td>Debug de response no terminal CI</td></tr>
+                <tr><td><code>logTestTitle()</code></td><td>Rastreia IDs de teste em arquivo por spec</td></tr>
+                <tr><td><code>cypress-mochawesome-reporter</code></td><td>HTML + JSON com steps</td></tr>
+                <tr><td><code>retries: { runMode: 2 }</code></td><td>Reexecuta spec em flake de rede</td></tr>
+                <tr><td><code>testIsolation: false</code></td><td>Compartilha token entre tests do describe</td></tr>
+              </tbody>
+            </table>
+            <table class="compare-table fragment fade-up" style="font-size: 0.58em; margin-top: 0.8em;">
+              <thead>
+                <tr><th></th><th>E2E UI</th><th>API</th><th>Component</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>Foco</strong></td><td>Fluxo usuário</td><td>Contrato REST</td><td>UI isolada</td></tr>
+                <tr><td><strong>Comando core</strong></td><td><code>cy.visit</code></td><td><code>cy.request</code></td><td><code>cy.mount</code></td></tr>
+                <tr><td><strong>Dados</strong></td><td>Fixtures UI</td><td>JSON Patch + Factory</td><td>Props mock</td></tr>
+                <tr><td><strong>Validação</strong></td><td>DOM assertions</td><td>Status + body deep.eq</td><td>Hook visible</td></tr>
+                <tr><td><strong>POM</strong></td><td>Page classes</td><td>Builders + Patterns</td><td>Hook maps</td></tr>
+              </tbody>
+            </table>
+          </section>
+        </section>
+
+        <!-- Component Testing section (vertical stack) -->
+        <section>
+          <section>
+            <h2>Component Testing <span class="ct-badge">cy.mount</span></h2>
+            <p class="fragment fade-up" style="font-size: 0.75em;">
+              Testa um <strong>componente isolado</strong> no browser — sem navegar pela app inteira.
+              Ideal para libs de UI, formulários e modais.
+            </p>
+            <div class="two-col fragment fade-up" style="font-size: 0.62em;">
+              <div class="feature-card">
+                <h4>E2E</h4>
+                <p><code>cy.visit('/app')</code> — fluxo completo</p>
+              </div>
+              <div class="feature-card">
+                <h4>Component</h4>
+                <p><code>cy.mount(Component)</code> — isolado e rápido</p>
+              </div>
+            </div>
+            <ul class="fragment fade-up" style="font-size: 0.68em; margin-top: 1em;">
+              <li>Spec ao lado do componente: <code>*.cy.tsx</code> ou <code>*.cy.ts</code></li>
+              <li>Config: <code>component.devServer</code> no <code>cypress.config</code></li>
+              <li>Props, providers e context injetados no mount</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>cy.mount — setup do componente</h2>
+            <pre class="fragment fade-up"><code class="language-typescript">// UserBadge.cy.tsx — React (exemplo fictício)
+import { UserBadge } from './UserBadge'
+import { AppProvider } from '../providers/AppProvider'
+
+describe('UserBadge', () => {
+  beforeEach(() => {
+    cy.mount(
+      &lt;AppProvider locale="en"&gt;
+        &lt;UserBadge user={{ name: 'Alex', verified: false }} /&gt;
+      &lt;/AppProvider&gt;
+    )
+  })
+
+  it('shows verify action when user is unverified', () => {
+    cy.getByHook('verify-action').should('be.visible')
+  })
+})
+
+// Angular equivalent uses cy.mount(Component, { imports, providers })</code></pre>
+            <div class="command-tags fragment fade-up">
+              <span class="cmd-tag">cy.mount</span>
+              <span class="cmd-tag">providers / imports</span>
+              <span class="cmd-tag">componentProperties</span>
+              <span class="cmd-tag">createOutputSpy()</span>
+            </div>
+          </section>
+
+          <section>
+            <h2>POM — Hook Maps (Elements)</h2>
+            <p style="font-size: 0.65em; color: var(--cypress-muted);">
+              Em component tests, o POM costuma ser um <strong>mapa de hooks</strong>
+              exportado de <code>cypress/support/elements/</code>.
+            </p>
+            <pre class="fragment fade-up"><code class="language-typescript">// cypress/support/elements/dialog.ts
+export const DIALOG = {
+  confirmBtn:  { hook: 'dialog-confirm' },
+  cancelBtn:   { hook: 'dialog-cancel' },
+  title:       { hook: 'dialog-title' },
+  errorIcon:   { hook: 'dialog-error-icon' },
+}
+
+// cypress/support/elements/user-form.ts
+export const USER_FORM = {
+  firstName:   { hook: 'input-first-name' },
+  lastName:    { hook: 'input-last-name' },
+  errorMsg:    { hook: 'field-error-message' },
+  helpText:    { hook: 'field-help-text' },
+}
+
+// No spec:
+cy.getByHook(DIALOG.confirmBtn.hook).click()
+cy.getByHook(USER_FORM.firstName.hook).type('Alex')
+cy.assertHookVisible(USER_FORM.helpText.hook)</code></pre>
+            <div class="page-map fragment fade-up">
+              <div class="page-map-item">shared.ts <span>radios, tooltips, overlay</span></div>
+              <div class="page-map-item">dialog.ts <span>modais, botões, erros</span></div>
+              <div class="page-map-item">user-form.ts <span>inputs, labels, validação</span></div>
+              <div class="page-map-item">data-table.ts <span>rows, sort, pagination</span></div>
+            </div>
+          </section>
+
+          <section>
+            <h2>Seletores — comandos customizados</h2>
+            <table class="compare-table compact fragment fade-up">
+              <thead><tr><th>Comando</th><th>Descrição</th></tr></thead>
+              <tbody>
+                <tr><td><code>cy.getByHook(value)</code></td><td><code>[data-cy-hook="…"]</code> — selector principal</td></tr>
+                <tr><td><code>cy.assertHookVisible(hook)</code></td><td>Shorthand <code>.should('be.visible')</code></td></tr>
+                <tr><td><code>cy.assertHookMissing(hook)</code></td><td>Elemento removido do DOM</td></tr>
+                <tr><td><code>cy.clickHook(hook)</code></td><td>get + click em um passo</td></tr>
+                <tr><td><code>cy.get(selector)</code></td><td>Fallback CSS quando necessário</td></tr>
+                <tr><td><code>.find()</code></td><td>Filhos dentro do componente montado</td></tr>
+                <tr><td><code>.focus().blur()</code></td><td>Disparar validação on blur</td></tr>
+              </tbody>
+            </table>
+            <pre class="fragment fade-up" style="font-size: 0.48em; margin-top: 0.6em;"><code class="language-javascript">// Implementação sugerida
+Cypress.Commands.add('getByHook', (hook) =>
+  cy.get(`[data-cy-hook="${hook}"]`, { timeout: 10000 })
+)</code></pre>
+          </section>
+
+          <section>
+            <h2>Design system — interações customizadas</h2>
+            <table class="compare-table compact fragment fade-up">
+              <thead><tr><th>Comando</th><th>Descrição</th></tr></thead>
+              <tbody>
+                <tr><td><code>cy.pickRadio(hook)</code></td><td>Seleciona radio button por hook</td></tr>
+                <tr><td><code>cy.openDropdown(hook, label)</code></td><td>Abre dropdown e escolhe opção</td></tr>
+                <tr><td><code>cy.openDropdownAt(hook, index)</code></td><td>Seleciona opção por índice</td></tr>
+                <tr><td><code>cy.closeDropdownOverlay()</code></td><td>Fecha via backdrop/overlay</td></tr>
+                <tr><td><code>cy.selectMenuItem(hook, label)</code></td><td>Menu contextual por texto</td></tr>
+                <tr><td><code>cy.clearField(hook)</code></td><td>Limpa input associado ao hook</td></tr>
+                <tr><td><code>cy.assertPlaceholder(hook, text)</code></td><td>Valida placeholder de input</td></tr>
+              </tbody>
+            </table>
+            <p class="fragment fade-up" style="font-size: 0.58em; color: var(--cypress-muted); margin-top: 0.6em;">
+              Encapsulam o design system — o spec não conhece classes CSS internas.
+            </p>
+          </section>
+
+          <section>
+            <h2>cy.intercept &amp; mocks</h2>
+            <pre class="fragment fade-up"><code class="language-typescript">// Spy — valida payload
+cy.intercept('PATCH', '/api/v1/profile', { statusCode: 204 }).as('saveProfile')
+cy.getByHook(USER_FORM.firstName.hook).type('Alex')
+cy.clickHook(DIALOG.confirmBtn.hook)
+cy.get('@saveProfile').its('request.body.firstName').should('eq', 'Alex')
+
+// Mock com fixture estática
+cy.mockApiGet('users/empty-list', '/api/v1/users')
+cy.mockApiGet('lookups/countries', '/api/v1/lookups/countries')
+
+// Helper reutilizável
+cy.stubPatchResource('profile').as('patchProfile')
+cy.wait('@patchProfile').its('response.statusCode').should('eq', 204)
+
+// Alterar headers no voo
+cy.intercept('POST', '/api/v1/verify', ({ headers }) => {
+  headers['X-Test-Bypass-RateLimit'] = 'true'
+})</code></pre>
+          </section>
+
+          <section>
+            <h2>Spec completo — dialog com validação</h2>
+            <pre class="fragment fade-up"><code class="language-typescript">// ConfirmDialog.cy.tsx (exemplo fictício)
+describe('ConfirmDialog', () => {
+  beforeEach(() => cy.mount(&lt;ConfirmDialog open /&gt;))
+
+  it('shows optional field when user picks Yes', () => {
+    cy.pickRadio(SHARED.yesOption.hook)
+    cy.assertHookVisible(USER_FORM.documentId.hook)
+  })
+
+  it('hides optional field when user picks No', () => {
+    cy.pickRadio(SHARED.noOption.hook)
+    cy.assertHookMissing(USER_FORM.documentId.hook)
+  })
+
+  it('shows validation error on empty blur', () => {
+    cy.getByHook(USER_FORM.documentId.hook).click()
+    cy.getByHook(DIALOG.title.hook).click()   // trigger blur
+    cy.getByHook(DIALOG.errorIcon.hook).should('be.visible')
+    cy.getByHook(USER_FORM.errorMsg.hook)
+      .should('contain.text', 'This field is mandatory')
+  })
+
+  it('submits successfully', () => {
+    cy.intercept('PATCH', '/api/v1/profile', { statusCode: 204 }).as('save')
+    cy.getByHook(USER_FORM.documentId.hook).type('ABC-12345')
+    cy.clickHook(DIALOG.confirmBtn.hook)
+    cy.get('@save').its('response.statusCode').should('eq', 204)
+  })
+})</code></pre>
+          </section>
+
+          <section>
+            <h2>Parametrização de testes</h2>
+            <pre class="fragment fade-up"><code class="language-typescript">function mountUserForm(props = {}) {
+  cy.mount(&lt;UserForm {...props} /&gt;)
+}
+
+const cases = [
+  {
+    title: 'hides help text when firstNameHelp is omitted',
+    props: { labels: { firstName: 'First name' } },
+    missingHook: USER_FORM.firstNameHelp.hook,
+  },
+  {
+    title: 'hides help text when lastNameHelp is omitted',
+    props: { labels: { lastName: 'Last name' } },
+    missingHook: USER_FORM.lastNameHelp.hook,
+  },
+]
+
+cases.forEach(({ title, props, missingHook }) => {
+  it(title, () => {
+    mountUserForm(props)
+    cy.getByHook(USER_FORM.firstName.hook).click().blur()
+    cy.getByHook(missingHook).should('not.exist')
+  })
+})</code></pre>
+            <p class="fragment fade-up" style="font-size: 0.6em; color: var(--cypress-muted);">
+              Um <code>it()</code> por combinação de props — evita duplicar o spec inteiro.
+            </p>
+          </section>
+
+          <section>
+            <h2>Responsive, fixtures &amp; utilitários</h2>
+            <table class="compare-table compact fragment fade-up">
+              <thead><tr><th>Comando</th><th>Uso em component tests</th></tr></thead>
+              <tbody>
+                <tr><td><code>cy.viewport(w, h)</code></td><td>Mobile / tablet / desktop</td></tr>
+                <tr><td><code>cy.fixture('viewports/desktop')</code></td><td>Lista de resoluções de teste</td></tr>
+                <tr><td><code>cy.fixture(…).as('alias')</code></td><td>Payloads, lookups, schemas</td></tr>
+                <tr><td><code>cy.wrap(value)</code></td><td>Re-enfileirar valor ou elemento</td></tr>
+                <tr><td><code>cy.get('@alias')</code></td><td>Reusar elemento ou intercept</td></tr>
+                <tr><td><code>createOutputSpy('onSave')</code></td><td>Espiar callback/evento de output</td></tr>
+                <tr><td><code>Cypress.on('uncaught:exception')</code></td><td>Suprimir erro do framework no mount</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2>Comandos customizados (Component)</h2>
+            <table class="compare-table compact fragment fade-up">
+              <tbody>
+                <tr class="group-row"><td colspan="2">Seletores</td></tr>
+                <tr><td><code>getByHook</code> · <code>assertHookVisible</code> · <code>assertHookMissing</code> · <code>clickHook</code></td><td>Base — <code>data-cy-hook</code></td></tr>
+                <tr class="group-row"><td colspan="2">Design system</td></tr>
+                <tr><td><code>pickRadio</code> · <code>openDropdown</code> · <code>openDropdownAt</code> · <code>selectMenuItem</code></td><td>Interações compostas</td></tr>
+                <tr><td><code>clearField</code> · <code>assertPlaceholder</code> · <code>closeDropdownOverlay</code></td><td>Inputs e overlays</td></tr>
+                <tr class="group-row"><td colspan="2">Mock &amp; Intercept</td></tr>
+                <tr><td><code>mockApiGet(fixture, url)</code> · <code>mockApiPost(…)</code></td><td>Fixture-based intercept</td></tr>
+                <tr><td><code>stubGetResource(name)</code> · <code>stubPatchResource(name)</code></td><td>Helpers por recurso REST</td></tr>
+                <tr><td><code>cy.intercept</code> · <code>cy.wait('@alias')</code> · <code>cy.get('@alias')</code></td><td>Spy, mock, inspect body</td></tr>
+                <tr class="group-row"><td colspan="2">Setup (specs integrados)</td></tr>
+                <tr><td><code>cy.session</code> · <code>cy.request</code> · <code>seedTestData()</code></td><td>Estado entre specs E2E de componente</td></tr>
+                <tr><td><code>formatDisplayValue()</code> · <code>randomFromFixture()</code></td><td>Helpers de assertion e dados</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2>E2E vs Component — quando usar</h2>
+            <table class="compare-table fragment fade-up" style="font-size: 0.6em;">
+              <thead>
+                <tr><th></th><th>Component (<code>cy.mount</code>)</th><th>E2E (<code>cy.visit</code>)</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>Escopo</strong></td><td>Um componente + providers</td><td>App inteira + routing</td></tr>
+                <tr><td><strong>Velocidade</strong></td><td>Rápido, isolado</td><td>Mais lento, integração real</td></tr>
+                <tr><td><strong>POM</strong></td><td>Hook maps (<code>elements/</code>)</td><td>Page classes (<code>pages/</code>)</td></tr>
+                <tr><td><strong>Seletor</strong></td><td><code>data-cy-hook</code></td><td><code>data-cy-hook</code> (mesma convenção)</td></tr>
+                <tr><td><strong>API</strong></td><td><code>intercept</code> + fixtures mock</td><td><code>cy.request</code> + session real</td></tr>
+                <tr><td><strong>Ideal para</strong></td><td>Validação, erros, i18n, responsivo</td><td>Fluxos cross-page, auth, smoke CI</td></tr>
+              </tbody>
+            </table>
+            <pre class="fragment fade-up" style="margin-top: 0.8em;"><code class="language-bash">npx cypress open --component
+npx cypress run --component --spec "**/UserBadge.cy.tsx"</code></pre>
+          </section>
+        </section>
+
+        <!-- Open vs Run -->
+        <section>
+          <h2>Modo interativo vs CI</h2>
+          <div class="two-col">
+            <div class="feature-card fragment fade-up">
+              <h4>🖥️ cypress open</h4>
+              <p>Runner visual para desenvolver e debugar testes.</p>
+              <pre><code class="language-bash">npx cypress open</code></pre>
+            </div>
+            <div class="feature-card fragment fade-up">
+              <h4>🤖 cypress run</h4>
+              <p>Headless — ideal para CI/CD e pipelines.</p>
+              <pre><code class="language-bash">npx cypress run
+npx cypress run --spec "cypress/e2e/sign-in.cy.js"</code></pre>
+            </div>
+          </div>
+          <p class="fragment fade-up" style="font-size: 0.65em; margin-top: 1em;">
+            Adicione scripts no <code>package.json</code>: <code>"cy:open"</code> e <code>"cy:run"</code>
+          </p>
+        </section>
+
+        <!-- Boas práticas -->
+        <section>
+          <h2>Boas práticas para começar</h2>
+          <ul>
+            <li class="fragment fade-up"><strong>Page Objects</strong> em <code>cypress/pages/</code> — selectors, actions e assertions separados</li>
+            <li class="fragment fade-up"><code>cy.getByHook</code> + <code>data-cy-hook</code> — convenção única em E2E e component tests</li>
+            <li class="fragment fade-up"><code>cy.signInViaAPI</code> no <code>beforeEach</code> — specs de feature mais rápidos</li>
+            <li class="fragment fade-up"><code>cy.intercept</code> para validar payloads e simular erros de API</li>
+            <li class="fragment fade-up">Fixtures em <code>cypress/fixtures/</code> — dados fictícios, sem PII real</li>
+            <li class="fragment fade-up">Um cenário por <code>it()</code> — falhas fáceis de diagnosticar</li>
+            <li class="fragment fade-up"><code>cy.session</code> + <code>validate()</code> — login cacheado entre specs</li>
+            <li class="fragment fade-up"><code>cy.section</code> / <code>cy.step</code> — relatório BDD legível no CI</li>
+            <li class="fragment fade-up">Tags com <code>@bahmutov/cy-grep</code> — rodar só <code>@smoke</code> ou <code>@critical</code></li>
+            <li class="fragment fade-up">Intercept com <code>req.reply</code> — mutar response sem mudar backend</li>
+            <li class="fragment fade-up"><strong>API tests</strong> — JSON Patch, retry polling, Test Builders para contratos REST</li>
+            <li class="fragment fade-up">Factories + Faker — dados dinâmicos; fixtures para lookups e endereços</li>
+            <li class="fragment fade-up"><strong>Component tests</strong> com <code>cy.mount</code> — E2E para fluxos integrados</li>
+          </ul>
+        </section>
+
+        <!-- Slide 12: Próximos passos -->
+        <section class="slide-cta">
+          <h2>Próximos passos</h2>
+          <p>Você já sabe instalar, configurar e escrever testes E2E e de componente com Cypress.</p>
+          <div class="links">
+            <a class="link-card fragment fade-up" href="https://docs.cypress.io" target="_blank" rel="noopener">
+              <strong>📚 Documentação</strong>
+              docs.cypress.io
+            </a>
+            <a class="link-card fragment fade-up" href="https://docs.cypress.io/app/component-testing/get-started" target="_blank" rel="noopener">
+              <strong>🧩 Component Testing</strong>
+              Guia oficial cy.mount
+            </a>
+            <a class="link-card fragment fade-up" href="https://learn.cypress.io" target="_blank" rel="noopener">
+              <strong>🎓 Cypress Learn</strong>
+              Tutoriais e exercícios oficiais
+            </a>
+          </div>
+          <p class="fragment fade-up badge" style="margin-top: 2em;">
+            ← → slides &nbsp;|&nbsp; ↓ ↑ sub-slides &nbsp;|&nbsp; F tela cheia &nbsp;|&nbsp; ESC overview
+          </p>
+        </section>
+
+      </div>
+    </div>
+
+    <script src="../../node_modules/reveal.js/dist/reveal.js"></script>
+    <script src="../../node_modules/reveal.js/plugin/highlight/highlight.js"></script>
+    <script>
+      const isPrintPdf = window.location.search.match(/print-pdf/gi)
+
+      Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        progress: true,
+        controls: true,
+        center: true,
+        transition: 'slide',
+        transitionSpeed: 'default',
+        backgroundTransition: 'fade',
+        width: 1280,
+        height: 720,
+        margin: 0.08,
+        pdfMaxPagesPerSlide: 1,
+        pdfSeparateFragments: false,
+        plugins: [RevealHighlight],
+      }).then(() => {
+        if (isPrintPdf) {
+          document.querySelectorAll('.fragment').forEach((el) => {
+            el.classList.add('visible', 'current-fragment')
+          })
+        }
+      })
+    </script>
+  </body>
+</html>

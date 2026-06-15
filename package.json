@@ -4,6 +4,9 @@
   "private": true,
   "description": "Cypress E2E automation for TestFlow web app",
   "scripts": {
+    "slides": "npx serve . -p 3333",
+    "slides:open": "npx serve . -p 3333 & sleep 1 && open http://localhost:3333/docs/slides/",
+    "slides:pdf": "node scripts/export-slides-pdf.mjs",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "cy:run:headed": "cypress run --headed",
@@ -19,6 +22,9 @@
     "cypress": "^13.17.0",
     "cypress-axe": "^1.5.0",
     "cypress-mochawesome-reporter": "^3.8.4",
-    "mochawesome-merge": "^4.4.1"
+    "decktape": "^3.16.1",
+    "highlight.js": "^11.11.1",
+    "mochawesome-merge": "^4.4.1",
+    "reveal.js": "^5.1.0"
   }
 }
