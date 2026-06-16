@@ -104,6 +104,13 @@ npm run cy:run:visual:percy
 
 E2E tests use TestFlow `data-testid`; component tests and slides use `data-cy-hook`. See [docs/selector-strategy.md](docs/selector-strategy.md).
 
+## Slides & training docs
+
+- **Português:** [`docs/pt/README.md`](docs/pt/README.md) — walkthrough bloco a bloco de cada spec
+- **English:** [`docs/en/README.md`](docs/en/README.md) — same training material in English
+- **Slides:** [`docs/slides/`](docs/slides/) — introductory presentation (HTML/PDF)
+- Run locally: TestFlow on port `5050`, then `npm run cy:run` or `npx cypress open`
+
 ## CI/CD
 
 Pipeline: `.github/workflows/cypress.yml`

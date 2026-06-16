@@ -1,7 +1,7 @@
 # Cypress — Perguntas Técnicas para Entrevistas
 
 > Banco de perguntas para entrevistas com recrutadores técnicos, QA leads, SDETs e engenheiros de software.  
-> Cobertura baseada no conteúdo dos slides (`docs/slides/index.html`) + tópicos frequentes em empresas brasileiras e internacionais.  
+> Cobertura baseada no conteúdo dos slides (`slides/index.html`) + tópicos frequentes em empresas brasileiras e internacionais.  
 > **Legenda:** `[SLIDE]` = abordado na apresentação · `[EXTRA]` = comum em entrevistas, fora dos slides.
 
 ---
@@ -596,7 +596,7 @@
 - [Cypress Best Practices](https://docs.cypress.io/guides/references/best-practices)
 - [Cypress Real World App](https://github.com/cypress-io/cypress-realworld-app)
 - [Testing Library Guiding Principles](https://testing-library.com/docs/guiding-principles)
-- Slides do projeto: `docs/slides/index.html`
+- Slides do projeto: `slides/index.html`
 
 ---
 
