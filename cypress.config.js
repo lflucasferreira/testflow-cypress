@@ -20,6 +20,7 @@ module.exports = defineConfig({
     overwrite: false,
     html: false,
     json: true,
+    removeJsonsFolderAfterMerge: false,
     reportDir: 'cypress/reports',
   },
 

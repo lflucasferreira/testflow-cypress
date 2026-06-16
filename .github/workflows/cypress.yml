@@ -80,9 +80,15 @@ jobs:
       - name: Rename JSON report
         if: always()
         run: |
-          src=$(find cypress/reports -name '*.json' 2>/dev/null | head -1)
+          src=$(find cypress/reports/.jsons -name '*.json' 2>/dev/null | head -1)
+          if [ -z "$src" ]; then
+            src=$(find cypress/reports -maxdepth 1 -name '*.json' 2>/dev/null | head -1)
+          fi
           if [ -n "$src" ]; then
-            mv "$src" "cypress/reports/smoke-gate.json"
+            cp "$src" "cypress/reports/smoke-gate.json"
+            echo "Copied $src → cypress/reports/smoke-gate.json"
+          else
+            echo "No JSON report found"
           fi
 
       - name: Upload JSON report
@@ -135,9 +141,15 @@ jobs:
       - name: Rename JSON report
         if: always()
         run: |
-          src=$(find cypress/reports -name '*.json' 2>/dev/null | head -1)
+          src=$(find cypress/reports/.jsons -name '*.json' 2>/dev/null | head -1)
+          if [ -z "$src" ]; then
+            src=$(find cypress/reports -maxdepth 1 -name '*.json' 2>/dev/null | head -1)
+          fi
           if [ -n "$src" ]; then
-            mv "$src" "cypress/reports/regression-gate.json"
+            cp "$src" "cypress/reports/regression-gate.json"
+            echo "Copied $src → cypress/reports/regression-gate.json"
+          else
+            echo "No JSON report found"
           fi
 
       - name: Upload JSON report
@@ -211,10 +223,13 @@ jobs:
       - name: Rename JSON report
         if: always()
         run: |
-          src=$(find cypress/reports -name '*.json' 2>/dev/null | head -1)
+          src=$(find cypress/reports/.jsons -name '*.json' 2>/dev/null | head -1)
+          if [ -z "$src" ]; then
+            src=$(find cypress/reports -maxdepth 1 -name '*.json' 2>/dev/null | head -1)
+          fi
           if [ -n "$src" ]; then
-            mv "$src" "cypress/reports/${{ matrix.suite }}.json"
-            echo "Renamed $src → cypress/reports/${{ matrix.suite }}.json"
+            cp "$src" "cypress/reports/${{ matrix.suite }}.json"
+            echo "Copied $src → cypress/reports/${{ matrix.suite }}.json"
           else
             echo "No JSON report found"
           fi
@@ -249,6 +264,10 @@ jobs:
         with:
           path: node_modules
           key: tests-${{ hashFiles('package-lock.json') }}
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-bin-${{ hashFiles('package-lock.json') }}
       - run: npm run cy:run:component
 
   visual:
@@ -320,12 +339,14 @@ jobs:
 
       - name: Merge reports and generate HTML
         run: |
-          jsons=$(find cypress/reports -name '*.json' 2>/dev/null)
-          if [ -z "$jsons" ]; then
+          json_files=$(find cypress/reports -maxdepth 1 -name '*.json' ! -name 'merged.json' 2>/dev/null | sort)
+          if [ -z "$json_files" ]; then
             echo "No JSON reports found — check test job logs for failures"
             exit 1
           fi
-          npx mochawesome-merge cypress/reports/*.json -o cypress/reports/merged.json
+          echo "Found JSON report(s):"
+          echo "$json_files" | sed 's/^/  /'
+          npx mochawesome-merge $json_files -o cypress/reports/merged.json
           npx marge cypress/reports/merged.json \
             --reportDir cypress/reports/html \
             --reportTitle "TestFlow — Cypress Report" \

@@ -119,7 +119,7 @@ describe('Authentication', { tags: '@regression' }, () => {
 
   context('Accessibility', () => {
     it('login page has no critical a11y violations', { tags: '@a11y' }, () => {
-      cy.checkA11yStandard()
+      cy.checkA11yPage('[data-testid="login-form"]', { preset: 'critical' })
     })
   })
 })
