@@ -13,6 +13,8 @@ concurrency:
 env:
   CI: true
   CYPRESS_DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+  CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+  CYPRESS_CI_BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
   # ── Stage 1: install test suite dependencies and populate caches ──────────
@@ -22,19 +24,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout test suite
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: 20
-
-      - name: Cache test suite node_modules
-        id: cache-tests
-        uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: tests-${{ hashFiles('package-lock.json') }}
+          cache: npm
 
       - name: Cache Cypress binary
         uses: actions/cache@v5
@@ -43,7 +39,6 @@ jobs:
           key: cypress-bin-${{ hashFiles('package-lock.json') }}
 
       - name: Install test suite dependencies
-        if: steps.cache-tests.outputs.cache-hit != 'true'
         run: npm ci
 
   # ── Stage 2: smoke gate (grep @smoke) ─────────────────────────────────────
@@ -63,19 +58,19 @@ jobs:
           --health-retries 6
           --health-start-period 90s
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cypress smoke
+        uses: cypress-io/github-action@v7
         with:
-          node-version: 20
-      - uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: tests-${{ hashFiles('package-lock.json') }}
-      - uses: actions/cache@v5
-        with:
-          path: ~/.cache/Cypress
-          key: cypress-bin-${{ hashFiles('package-lock.json') }}
-      - run: npm run cy:run:smoke
+          install: true
+          wait-on: 'http://localhost:5050/health'
+          wait-on-timeout: 120
+          command: npm run cy:run:smoke
+        env:
+          CYPRESS_CLOUD_GROUP: smoke-gate
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rename JSON report
         if: always()
@@ -93,7 +88,7 @@ jobs:
 
       - name: Upload JSON report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: report-json-smoke-gate
           path: cypress/reports/smoke-gate.json
@@ -101,7 +96,7 @@ jobs:
 
       - name: Upload screenshots on failure
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: screenshots-smoke
           path: cypress/screenshots
@@ -124,19 +119,19 @@ jobs:
           --health-retries 6
           --health-start-period 90s
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cypress regression
+        uses: cypress-io/github-action@v7
         with:
-          node-version: 20
-      - uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: tests-${{ hashFiles('package-lock.json') }}
-      - uses: actions/cache@v5
-        with:
-          path: ~/.cache/Cypress
-          key: cypress-bin-${{ hashFiles('package-lock.json') }}
-      - run: npm run cy:run:regression
+          install: true
+          wait-on: 'http://localhost:5050/health'
+          wait-on-timeout: 120
+          command: npm run cy:run:regression
+        env:
+          CYPRESS_CLOUD_GROUP: regression-gate
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rename JSON report
         if: always()
@@ -154,7 +149,7 @@ jobs:
 
       - name: Upload JSON report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: report-json-regression-gate
           path: cypress/reports/regression-gate.json
@@ -162,18 +157,18 @@ jobs:
 
       - name: Upload screenshots on failure
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: screenshots-regression
           path: cypress/screenshots
           if-no-files-found: ignore
 
-  # ── Stage 3: run each suite in parallel ───────────────────────────────────
-  test:
-    name: Cypress — ${{ matrix.suite }}
+  # ── Stage 3: E2E suite — Cypress Cloud record + parallel ──────────────────
+  cypress-run:
+    name: Cypress — E2E (container ${{ matrix.containers }})
     runs-on: ubuntu-latest
     needs: setup
-    timeout-minutes: 15
+    timeout-minutes: 30
     services:
       testflow:
         image: qaschool/testflow:latest
@@ -187,38 +182,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [api, smoke, auth, dashboard, team, settings, components, wizard, advanced, activity, states]
+        containers: [1, 2]
     steps:
-      - name: Checkout test suite
-        uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
+      - name: Cypress run
+        uses: cypress-io/github-action@v7
         with:
-          node-version: 20
-
-      - name: Restore test suite node_modules
-        uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: tests-${{ hashFiles('package-lock.json') }}
-
-      - name: Restore Cypress binary
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/Cypress
-          key: cypress-bin-${{ hashFiles('package-lock.json') }}
-
-      - name: Verify TestFlow is reachable
-        continue-on-error: true
-        run: curl -sf http://localhost:5050/health && echo "TestFlow OK" || echo "TestFlow not reachable"
-
-      - name: Run Cypress — ${{ matrix.suite }}
-        run: npm run cy:run:${{ matrix.suite }}
-
-      - name: List report files
-        if: always()
-        run: find cypress/reports -type f 2>/dev/null || echo "cypress/reports not found"
+          install: true
+          wait-on: 'http://localhost:5050/health'
+          wait-on-timeout: 120
+          record: true
+          parallel: true
+          group: e2e
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rename JSON report
         if: always()
@@ -228,25 +207,25 @@ jobs:
             src=$(find cypress/reports -maxdepth 1 -name '*.json' 2>/dev/null | head -1)
           fi
           if [ -n "$src" ]; then
-            cp "$src" "cypress/reports/${{ matrix.suite }}.json"
-            echo "Copied $src → cypress/reports/${{ matrix.suite }}.json"
+            cp "$src" "cypress/reports/e2e-container-${{ matrix.containers }}.json"
+            echo "Copied $src → cypress/reports/e2e-container-${{ matrix.containers }}.json"
           else
             echo "No JSON report found"
           fi
 
       - name: Upload JSON report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
-          name: report-json-${{ matrix.suite }}
-          path: cypress/reports/${{ matrix.suite }}.json
+          name: report-json-e2e-${{ matrix.containers }}
+          path: cypress/reports/e2e-container-${{ matrix.containers }}.json
           if-no-files-found: ignore
 
       - name: Upload screenshots on failure
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
-          name: screenshots-${{ matrix.suite }}
+          name: screenshots-e2e-${{ matrix.containers }}
           path: cypress/screenshots
           if-no-files-found: ignore
 
@@ -256,19 +235,17 @@ jobs:
     needs: setup
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cypress component tests
+        uses: cypress-io/github-action@v7
         with:
-          node-version: 20
-      - uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: tests-${{ hashFiles('package-lock.json') }}
-      - uses: actions/cache@v5
-        with:
-          path: ~/.cache/Cypress
-          key: cypress-bin-${{ hashFiles('package-lock.json') }}
-      - run: npm run cy:run:component
+          install: true
+          command: npm run cy:run:component
+        env:
+          CYPRESS_CLOUD_GROUP: component
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   visual:
     name: Percy — visual regression
@@ -286,18 +263,12 @@ jobs:
           --health-retries 6
           --health-start-period 90s
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v5
         with:
           node-version: 20
-      - uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: tests-${{ hashFiles('package-lock.json') }}
-      - uses: actions/cache@v5
-        with:
-          path: ~/.cache/Cypress
-          key: cypress-bin-${{ hashFiles('package-lock.json') }}
+          cache: npm
+      - run: npm ci
       - name: Run Percy visual tests
         run: npm run cy:run:visual:percy
         env:
@@ -308,26 +279,23 @@ jobs:
   report:
     name: Generate HTML report
     runs-on: ubuntu-latest
-    needs: [test, smoke, regression]
+    needs: [cypress-run, smoke, regression]
     if: always()
     timeout-minutes: 5
     steps:
       - name: Checkout test suite
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: 20
+          cache: npm
 
-      - name: Restore test suite node_modules
-        uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: tests-${{ hashFiles('package-lock.json') }}
+      - run: npm ci
 
       - name: Download all JSON reports
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           pattern: report-json-*
           merge-multiple: true
@@ -355,7 +323,7 @@ jobs:
 
       - name: Publish HTML report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: cypress-report
           path: cypress/reports/html
