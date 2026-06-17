@@ -2,6 +2,9 @@
 
 Cypress E2E and component automation for [TestFlow](https://github.com/qaschoolbr/testflow) — a web sandbox for QA practice and automation learning.
 
+[![CI](https://github.com/lflucasferreira/testflow-cypress/actions/workflows/cypress.yml/badge.svg)](https://github.com/lflucasferreira/testflow-cypress/actions/workflows/cypress.yml)
+[![Cypress Cloud](https://img.shields.io/endpoint?url=https://cloud.cypress.io/badge/detailed/jb6cfs/main&style=flat-square)](https://cloud.cypress.io/projects/jb6cfs/runs)
+
 ## Stack
 
 | Tool | Version | Purpose |
@@ -125,12 +128,32 @@ Pipeline: `.github/workflows/cypress.yml`
 
 | Job | What it runs |
 |-----|--------------|
-| `smoke` | `@smoke` grep gate + **Cypress Cloud** record (if `CYPRESS_RECORD_KEY` set) |
-| `regression` | `@regression` grep gate |
-| `test` | Matrix per suite (parallel) |
+| `smoke` | `@smoke` grep gate — records to Cypress Cloud when `CYPRESS_RECORD_KEY` is set |
+| `regression` | `@regression` grep gate — records to Cypress Cloud when `CYPRESS_RECORD_KEY` is set |
+| `cypress-run` | Full E2E suite, 2 parallel containers — `record: true`, `parallel: true` |
 | `component` | React component tests |
 | `visual` | Percy snapshots (`PERCY_TOKEN` secret) |
 | `report` | Merged mochawesome HTML artifact |
+
+## Cypress Cloud
+
+**Dashboard:** [cloud.cypress.io/projects/jb6cfs](https://cloud.cypress.io/projects/jb6cfs/runs)
+
+All CI runs are recorded to Cypress Cloud (project `jb6cfs`). Each run includes:
+
+- **Test Replay** — browser-level video replay of every spec, no video upload needed
+- **Parallel execution** — `cypress-run` splits the full suite across 2 containers; Cypress Cloud handles load balancing
+- **Run groups** — `smoke-gate`, `regression-gate`, `e2e` recorded as separate groups in the same CI build
+
+To record locally:
+
+```bash
+export CYPRESS_RECORD_KEY=your-record-key
+npm run cy:run:smoke:cloud   # smoke only
+npm run cy:run:cloud         # full suite
+```
+
+The `CYPRESS_RECORD_KEY` secret must be added to **GitHub → Settings → Secrets → Actions**. `GITHUB_TOKEN` is provided automatically by Actions.
 
 ## Project structure
 
