@@ -5,6 +5,8 @@ const { registerTasks } = require('./cypress/support/tasks')
 const isCI = Boolean(process.env.CI)
 
 module.exports = defineConfig({
+  projectId: 'jb6cfs',
+
   expose: {
     grepFilterSpecs: true,
     grepOmitFiltered: true,
@@ -18,7 +20,7 @@ module.exports = defineConfig({
     inlineAssets: true,
     saveAllAttempts: false,
     overwrite: false,
-    html: false,
+    html: !isCI,
     json: true,
     removeJsonsFolderAfterMerge: false,
     reportDir: 'cypress/reports',

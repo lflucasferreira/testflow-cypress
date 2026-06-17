@@ -12,6 +12,7 @@ Cypress E2E and component automation for [TestFlow](https://github.com/qaschoolb
 | Ajv | 8.x | JSON Schema contract validation |
 | @percy/cypress | 3.x | Visual regression (optional) |
 | mochawesome | — | HTML reports in CI |
+| Cypress Cloud | — | Test Replay (smoke gate, project `jb6cfs`) |
 
 ## Test coverage
 
@@ -60,7 +61,7 @@ export CYPRESS_DEMO_EMAIL=demo@automation.io
 export CYPRESS_DEMO_PASSWORD=your-secret
 ```
 
-In GitHub Actions, set repository secret `DEMO_PASSWORD`.
+In GitHub Actions, set repository secrets `DEMO_PASSWORD` and `CYPRESS_RECORD_KEY` (from [Cypress Cloud](https://cloud.cypress.io/projects/jb6cfs)). See [docs/cypress-cloud-setup.md](docs/cypress-cloud-setup.md).
 
 ### Environments
 
@@ -96,6 +97,13 @@ npm run cy:run:component
 # Visual regression (requires PERCY_TOKEN)
 export PERCY_TOKEN=your_percy_token
 npm run cy:run:visual:percy
+
+# HTML report (local)
+npm run cy:run:smoke:report
+
+# Cypress Cloud — smoke only (requires CYPRESS_RECORD_KEY)
+export CYPRESS_RECORD_KEY=your_record_key
+npm run cy:run:smoke:cloud
 ```
 
 > **Cursor IDE:** if Cypress fails to launch, run with `env -u ELECTRON_RUN_AS_NODE npm run cy:run`.
@@ -117,7 +125,7 @@ Pipeline: `.github/workflows/cypress.yml`
 
 | Job | What it runs |
 |-----|--------------|
-| `smoke` | `@smoke` grep gate |
+| `smoke` | `@smoke` grep gate + **Cypress Cloud** record (if `CYPRESS_RECORD_KEY` set) |
 | `regression` | `@regression` grep gate |
 | `test` | Matrix per suite (parallel) |
 | `component` | React component tests |
